@@ -1,0 +1,13 @@
+spot_id,maize_rwf,beans_rwf,soya_rwf,rice_rwf,palm_oil_rwf,gold_usd,updated_at,reported_by,change_pct,status
+kimironko,326,580,420,850,,2025-04-22T08:30:00Z,patrick,2.5,live
+nyabugogo,320,575,415,845,,,2025-04-22T08:15:00Z,marie,1.8,live
+remera,328,582,422,852,,,2025-04-22T07:45:00Z,jean,2.1,live
+musanze,315,560,400,830,,,2025-04-22T09:00:00Z,emmanuel,-0.5,live
+huye,310,555,395,825,,,2025-04-22T08:00:00Z,claire,1.2,live
+rubavu,335,590,430,860,,,2025-04-22T07:30:00Z,olivier,3.2,live
+rwamagana,318,565,405,835,,,2025-04-22T08:45:00Z,alice,0.8,live
+rusumo,305,545,385,815,,,2025-04-22T06:30:00Z,david,-1.5,live
+owino,990,1450,1100,2100,,,2025-04-22T07:00:00Z,peter,1.5,live
+mbarara,1020,1480,1120,2150,,,2025-04-22T06:45:00Z,sarah,2.0,live
+goma,340,600,,,1920,1920,2025-04-22T09:15:00Z,omar,4.5,live
+bukavu,330,590,,,1850,,2025-04-22T08:20:00Z,jules,2.8,live

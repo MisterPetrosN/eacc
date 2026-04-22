@@ -1,0 +1,13 @@
+id,name,country,region,flag,priority,active,lat,lng,notes
+kimironko,Kimironko,RW,Kigali,🇷🇼,true,true,-1.9403,30.1217,Main benchmark market
+nyabugogo,Nyabugogo,RW,Kigali,🇷🇼,true,true,-1.9356,30.0528,Bus station market
+remera,Remera,RW,Kigali,🇷🇼,false,true,-1.9534,30.1041,Residential area market
+musanze,Musanze,RW,North,🇷🇼,true,true,-1.4985,29.6346,Northern hub
+huye,Huye,RW,South,🇷🇼,false,true,-2.5967,29.7394,Southern university town
+rubavu,Rubavu,RW,West,🇷🇼,true,true,-1.6803,29.2583,Lake Kivu border town
+rwamagana,Rwamagana,RW,East,🇷🇼,false,true,-1.9520,30.4345,Eastern province capital
+rusumo,Rusumo,XB,Border,🇷🇼,false,true,-2.3833,30.7833,Tanzania border crossing
+owino,Kampala Owino,UG,Kampala,🇺🇬,true,true,0.3129,32.5821,Largest market in Uganda
+mbarara,Mbarara,UG,Western,🇺🇬,false,true,-0.6067,30.6546,Western Uganda hub
+goma,Goma,CD,North Kivu,🇨🇩,true,true,-1.6585,29.2220,DRC gold trading hub
+bukavu,Bukavu,CD,South Kivu,🇨🇩,false,true,-2.5084,28.8603,South Kivu capital

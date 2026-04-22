@@ -1,0 +1,20 @@
+key,value
+greeting,Good morning
+weekly_jackpot_usd,15
+lean_season_days,45
+lean_season_window,Jul 15 – Aug 30
+spread_usd,28
+spread_status,Profitable route
+hero_change_maize,2.3
+hero_change_beans,1.8
+hero_change_soya,1.5
+hero_change_rice,0.9
+reports_per_ticket,3
+reports_per_day,2
+ticket_value_usd,0.50
+twilio_number,250788000000
+accuracy_threshold_good,85
+accuracy_threshold_review,70
+ugx_rate,3700
+rwf_rate,1280
+use_live_exchange_rates,true

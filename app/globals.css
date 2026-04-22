@@ -3,21 +3,149 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* EACC Design System Colors */
+  --green: #1A5C36;
+  --green-mid: #2E7D52;
+  --green-light: #3DAA6A;
+  --green-pale: #EBF7EF;
+  --amber: #F59E0B;
+  --amber-bg: #FFFBEB;
+  --orange: #F97316;
+  --red: #EF4444;
+  --ink: #111827;
+  --ink2: #374151;
+  --ink3: #6B7280;
+  --ink4: #9CA3AF;
+  --border: #E5E7EB;
+  --surface: #F0F2F5;
+  --white: #FFFFFF;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+/* Skeleton pulse animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--border) 25%, #d1d5db 50%, var(--border) 75%);
+  background-size: 200% 100%;
+}
+
+/* Live dot pulse animation */
+@keyframes live-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+.live-pulse {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* Price display - Outfit 900 */
+.price-display {
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ink4);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink3);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--green-light);
+  outline-offset: 2px;
+}
+
+/* Card hover transition */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  border-color: var(--green-light);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 12px rgba(26, 92, 54, 0.08);
+}
+
+/* Spot card styles */
+.spot-card-priority {
+  background: var(--amber-bg);
+  border-color: #FDE68A;
+}
+
+/* Hero card decorative circles */
+.hero-card::before {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  top: -60px;
+  right: -40px;
+}
+
+.hero-card::after {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  bottom: -50px;
+  left: -30px;
+}
+
+/* Range slider styling */
+input[type="range"] {
+  accent-color: var(--green);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  cursor: pointer;
+}
+
+/* Mono numbers */
+.mono-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 @layer utilities {

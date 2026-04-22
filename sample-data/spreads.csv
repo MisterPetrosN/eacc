@@ -1,0 +1,4 @@
+id,route_name,buy_spot_id,sell_spot_id,freight_default,phyto_default,customs_default,agent_fee_default,contingency_default,status,notes
+ug-rw-maize,Uganda to Rwanda Maize,owino,kimironko,65,12,12,10,8,active,Primary cross-border route
+tz-rw-beans,Tanzania to Rwanda Beans,rusumo,kimironko,45,10,10,8,6,active,Eastern border route
+cd-rw-gold,DRC to Rwanda Gold,goma,kimironko,20,5,15,12,10,active,Gold trade route

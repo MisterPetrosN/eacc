@@ -1,0 +1,13 @@
+name,phone,spot_id,active,streak,tickets_month,accuracy_pct,notes
+Patrick Mugisha,250788111111,kimironko,true,12,15,94,Top performer
+Marie Uwimana,250788222222,nyabugogo,true,8,12,91,Consistent reporter
+Jean Baptiste,250788333333,remera,true,5,10,88,
+Emmanuel Habimana,250788444444,musanze,true,15,14,92,Northern region lead
+Claire Mukamana,250788555555,huye,true,3,8,85,
+Olivier Ndayisaba,250788666666,rubavu,true,7,11,89,Border specialist
+Alice Uwera,250788777777,rwamagana,true,4,9,86,
+David Niyonzima,250788888888,rusumo,true,6,10,87,Cross-border expert
+Peter Omondi,256788111111,owino,true,10,13,90,Uganda lead
+Sarah Nakato,256788222222,mbarara,true,4,8,84,
+Omar Kabila,243788111111,goma,true,9,12,93,Gold reporter
+Jules Bahati,243788222222,bukavu,true,2,6,82,New agent
