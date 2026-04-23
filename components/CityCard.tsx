@@ -33,6 +33,8 @@ interface CityData {
 
 interface CityCardProps {
   city: CityData;
+  onReportPrice?: (cityId: string, commodity: string) => void;
+  onPlayVoice?: (cityId: string) => void;
 }
 
 const commodityConfig = [
@@ -46,8 +48,20 @@ const commodityConfig = [
 
 const goldConfig = { key: "gold", name: "Gold", emoji: "🥇" };
 
-export function CityCard({ city }: CityCardProps) {
-  const [isSpeaking, setIsSpeaking] = useState(false);
+// Pill component styles
+const pillStyles = {
+  metadata: "bg-white border border-[rgba(0,0,0,0.08)] rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-500 tracking-wide",
+  value: "bg-white border border-[rgba(0,0,0,0.1)] rounded-full px-3 py-1 font-medium text-sm text-[var(--ink)] hover:translate-y-[-1px] hover:shadow-sm transition-all",
+  valueGold: "bg-white border border-[#EF9F27] rounded-full px-3 py-1 font-medium text-sm text-[#633806] hover:translate-y-[-1px] hover:shadow-sm transition-all",
+  changePositive: "bg-[#EAF3DE] text-[#3B6D11] rounded-full px-2 py-0.5 text-[11px] font-medium",
+  changeNegative: "bg-[#FCEBEB] text-[#A32D2D] rounded-full px-2 py-0.5 text-[11px] font-medium",
+  changeNeutral: "text-gray-400 text-[11px] font-medium",
+  goldUnit: "bg-[#FAEEDA] text-[#633806] rounded-full px-2 py-0.5 text-[10px] font-medium",
+  goldHubBadge: "bg-[#FAEEDA] text-[#633806] rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
+};
+
+export function CityCard({ city, onReportPrice, onPlayVoice }: CityCardProps) {
+  const [isSpeakingState, setIsSpeakingState] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
 
   useEffect(() => {
@@ -57,23 +71,29 @@ export function CityCard({ city }: CityCardProps) {
   const handleVoiceClick = () => {
     playTapSound();
 
-    if (isSpeaking) {
+    if (isSpeakingState) {
       stopSpeaking();
-      setIsSpeaking(false);
+      setIsSpeakingState(false);
     } else {
-      setIsSpeaking(true);
+      setIsSpeakingState(true);
+      onPlayVoice?.(city.id);
       speakPrices(city.name, city.prices, city.currency, "en");
 
-      // Reset speaking state when done (approximate based on content length)
+      // Reset speaking state when done
       const commodityCount = Object.keys(city.prices).filter(
         (k) => city.prices[k as keyof typeof city.prices]?.value !== null
       ).length;
       const duration = 2000 + commodityCount * 2500;
 
       setTimeout(() => {
-        setIsSpeaking(false);
+        setIsSpeakingState(false);
       }, duration);
     }
+  };
+
+  const handlePriceClick = (commodity: string) => {
+    playTapSound();
+    onReportPrice?.(city.id, commodity);
   };
 
   const hasGold = city.prices.gold?.value !== null && city.prices.gold?.value !== undefined;
@@ -82,28 +102,48 @@ export function CityCard({ city }: CityCardProps) {
   const formatPrice = (price: PriceData | undefined, isGold = false): string => {
     if (!price || price.value === null) return "—";
     if (isGold) {
-      return `$${price.value.toFixed(2)}`;
+      return price.value.toFixed(2);
     }
     return price.value.toLocaleString();
   };
 
-  const formatChange = (change: number | null): { text: string; color: string } => {
+  const renderChangePill = (change: number | null, isGold = false) => {
     if (change === null || change === undefined) {
-      return { text: "—", color: "text-gray-400" };
+      return <span className={pillStyles.changeNeutral}>—</span>;
     }
-    if (change > 0) {
-      return { text: `+${change.toFixed(1)}%`, color: "text-[#3B6D11]" };
+
+    const isPositive = change > 0;
+    const isNegative = change < 0;
+    const arrow = isPositive ? "↗" : isNegative ? "↘" : "";
+    const srText = isPositive
+      ? `up ${Math.abs(change).toFixed(1)} percent`
+      : isNegative
+      ? `down ${Math.abs(change).toFixed(1)} percent`
+      : "unchanged";
+
+    if (change === 0) {
+      return <span className={pillStyles.changeNeutral}>0%</span>;
     }
-    if (change < 0) {
-      return { text: `${change.toFixed(1)}%`, color: "text-[#A32D2D]" };
-    }
-    return { text: "0%", color: "text-gray-400" };
+
+    return (
+      <span
+        className={
+          isPositive ? pillStyles.changePositive : pillStyles.changeNegative
+        }
+      >
+        <span className="sr-only">{srText}</span>
+        <span aria-hidden="true">
+          {arrow} {Math.abs(change).toFixed(1)}%
+        </span>
+      </span>
+    );
   };
 
   return (
     <div
-      className="rounded-xl bg-[#FEF9E7] p-4"
+      className="rounded-2xl p-4"
       style={{
+        backgroundColor: "#FEF9E7",
         border: isGomaStyle
           ? "1px solid #EF9F27"
           : "0.5px solid rgba(0,0,0,0.08)",
@@ -117,36 +157,41 @@ export function CityCard({ city }: CityCardProps) {
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-lg">{city.flag}</span>
-            <span className="font-medium text-[15px] text-[var(--ink)]">
+            <span className="font-medium text-base text-[var(--ink)]">
               {city.name}
             </span>
             {city.specialBadge && (
-              <span
-                className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: "#FAEEDA", color: "#633806" }}
-              >
+              <span className={pillStyles.goldHubBadge}>
                 {city.specialBadge}
               </span>
             )}
           </div>
-          <p className="text-[11px] text-gray-500 mt-0.5">{city.subtitle}</p>
+          <p className="text-xs text-gray-500 mt-1">{city.subtitle}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-medium text-gray-500">
-            {city.currency}
-          </span>
+          {/* Currency metadata pill */}
+          <span className={pillStyles.metadata}>{city.currency}</span>
+
+          {/* Voice button */}
           {speechSupported && (
             <button
               onClick={handleVoiceClick}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-              style={{ backgroundColor: "rgba(0,0,0,0.04)" }}
-              title={isSpeaking ? "Stop" : "Listen to prices"}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                isSpeakingState
+                  ? "bg-[var(--green)] text-white animate-pulse"
+                  : "bg-white border border-[rgba(0,0,0,0.08)] text-gray-600 hover:bg-gray-50"
+              }`}
+              aria-label={
+                isSpeakingState
+                  ? `Stop playing prices for ${city.name}`
+                  : `Play prices for ${city.name}`
+              }
             >
-              {isSpeaking ? (
-                <VolumeX size={16} className="text-gray-600" />
+              {isSpeakingState ? (
+                <VolumeX size={16} />
               ) : (
-                <Volume2 size={16} className="text-gray-600" />
+                <Volume2 size={16} />
               )}
             </button>
           )}
@@ -154,29 +199,33 @@ export function CityCard({ city }: CityCardProps) {
       </div>
 
       {/* Commodity rows */}
-      <div className="space-y-0">
+      <div className="space-y-1.5">
         {commodityConfig.map((commodity) => {
           const price = city.prices[commodity.key as keyof typeof city.prices];
-          const changeInfo = formatChange(price?.change ?? null);
+          const hasPrice = price?.value !== null && price?.value !== undefined;
 
           return (
             <div
               key={commodity.key}
-              className="flex justify-between items-center py-[7px]"
+              className="flex justify-between items-center py-1.5"
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm">{commodity.emoji}</span>
-                <span className="text-[13px] text-gray-600">
-                  {commodity.name}
-                </span>
+                <span className="text-sm text-gray-600">{commodity.name}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-[15px] text-[var(--ink)]">
+              <div className="flex items-center gap-2">
+                {/* Price value pill - tappable */}
+                <button
+                  onClick={() => handlePriceClick(commodity.key)}
+                  className={pillStyles.value}
+                  aria-label={`${commodity.name} price: ${
+                    hasPrice ? `${formatPrice(price)} ${city.currency}` : "no data"
+                  }. Tap to report update.`}
+                >
                   {formatPrice(price)}
-                </span>
-                <span className={`text-xs ${changeInfo.color}`}>
-                  {changeInfo.text}
-                </span>
+                </button>
+                {/* Change pill */}
+                {renderChangePill(price?.change ?? null)}
               </div>
             </div>
           );
@@ -185,26 +234,31 @@ export function CityCard({ city }: CityCardProps) {
         {/* Gold row - special styling */}
         {hasGold && (
           <div
-            className="flex justify-between items-center pt-3 mt-1"
+            className="flex justify-between items-center pt-3 mt-2"
             style={{ borderTop: "0.5px dashed rgba(0,0,0,0.15)" }}
           >
             <div className="flex items-center gap-2">
               <span className="text-sm">{goldConfig.emoji}</span>
-              <span
-                className="text-[13px] font-medium"
-                style={{ color: "#633806" }}
-              >
+              <span className="text-sm font-medium text-[#633806]">
                 {goldConfig.name}
               </span>
+              {/* Gold unit badge */}
+              <span className={pillStyles.goldUnit}>USD/g</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-[15px] text-[var(--ink)]">
+              {/* Gold price pill - orange bordered */}
+              <button
+                onClick={() => handlePriceClick("gold")}
+                className={pillStyles.valueGold}
+                aria-label={`Gold price: ${formatPrice(
+                  city.prices.gold,
+                  true
+                )} USD per gram. Tap to report update.`}
+              >
                 {formatPrice(city.prices.gold, true)}
-              </span>
-              <span className="text-[10px] text-gray-400">USD/g</span>
-              <span className={`text-xs ${formatChange(city.prices.gold?.change ?? null).color}`}>
-                {formatChange(city.prices.gold?.change ?? null).text}
-              </span>
+              </button>
+              {/* Change pill */}
+              {renderChangePill(city.prices.gold?.change ?? null, true)}
             </div>
           </div>
         )}

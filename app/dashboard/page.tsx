@@ -382,7 +382,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Commodity Filter Pills */}
+      {/* Commodity Filter Pills - using pill design system */}
       <div className="flex flex-wrap gap-2">
         {filterPills.map((pill) => {
           const isActive = activeFilter === pill.key;
@@ -391,11 +391,12 @@ export default function DashboardPage() {
             <button
               key={pill.key}
               onClick={() => setActiveFilter(pill.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-all tracking-wide ${
                 isActive
-                  ? "bg-[var(--orange)] text-white"
-                  : "bg-white border border-[var(--border)] text-[var(--ink3)] hover:border-[var(--green-light)]"
+                  ? "bg-[#EF9F27] text-[#4A1B0C]"
+                  : "bg-white border border-[rgba(0,0,0,0.08)] text-gray-500 hover:border-[rgba(0,0,0,0.15)]"
               }`}
+              aria-pressed={isActive}
             >
               {pill.emoji} {pill.label}
             </button>
@@ -512,7 +513,17 @@ export default function DashboardPage() {
             }}
           >
             {cityBundles.map((city) => (
-              <CityCard key={city.id} city={city} />
+              <CityCard
+                key={city.id}
+                city={city}
+                onReportPrice={(cityId, commodity) => {
+                  // TODO: Open price report modal
+                  console.log(`Report price for ${commodity} in ${cityId}`);
+                }}
+                onPlayVoice={(cityId) => {
+                  console.log(`Playing voice for ${cityId}`);
+                }}
+              />
             ))}
           </div>
         ) : (
