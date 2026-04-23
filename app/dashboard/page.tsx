@@ -4,15 +4,17 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Mic,
-  Grid3X3,
   Trophy,
   Ticket,
   ChevronRight,
   Volume2,
   AlertCircle,
+  Grid3X3,
 } from "lucide-react";
 import { HeroCard } from "@/components/HeroCard";
 import { SpotCard } from "@/components/SpotCard";
+import { CityCard } from "@/components/CityCard";
+import { BestPriceComparison } from "@/components/BestPriceComparison";
 import { DashboardSkeleton } from "@/components/Skeleton";
 import type {
   DashboardData,
@@ -28,12 +30,42 @@ interface ExtendedDashboardData extends DashboardData {
   exchangeRates: { ugx_to_usd: number; rwf_to_usd: number };
 }
 
+// City data structure for city-first view
+interface CityPriceData {
+  value: number | null;
+  change: number | null;
+  unit?: string;
+  reportedAt?: string;
+}
+
+interface CityBundle {
+  id: string;
+  name: string;
+  country: string;
+  flag: string;
+  subtitle: string;
+  currency: string;
+  specialBadge?: string | null;
+  accentBorder?: string;
+  prices: {
+    maize?: CityPriceData;
+    beans?: CityPriceData;
+    soya?: CityPriceData;
+    rice?: CityPriceData;
+    palm_oil?: CityPriceData;
+    fuel?: CityPriceData;
+    gold?: CityPriceData;
+  };
+}
+
+type FilterType = "all" | CommodityType;
+
 export default function DashboardPage() {
   const [data, setData] = useState<ExtendedDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stale, setStale] = useState(false);
-  const [activeCommodity, setActiveCommodity] = useState<CommodityType>("maize");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [countdown, setCountdown] = useState("");
 
   const fetchDashboard = useCallback(async () => {
@@ -68,8 +100,7 @@ export default function DashboardPage() {
       const now = new Date();
       const target = new Date();
 
-      // Set to next Sunday 6pm EAT (UTC+3)
-      target.setUTCHours(15, 0, 0, 0); // 6pm EAT = 3pm UTC
+      target.setUTCHours(15, 0, 0, 0);
       const daysUntilSunday = (7 - now.getUTCDay()) % 7;
       target.setUTCDate(now.getUTCDate() + (daysUntilSunday || 7));
 
@@ -92,6 +123,139 @@ export default function DashboardPage() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Transform spots data into city bundles
+  const transformToCityBundles = (): CityBundle[] => {
+    if (!data) return [];
+
+    // Group spots by city/region
+    const cityMap = new Map<string, CityBundle>();
+
+    // Define city configurations
+    const cityConfigs: Record<string, Partial<CityBundle>> = {
+      kigali: {
+        name: "Kigali",
+        subtitle: "Rwanda · 3 markets live",
+        currency: "RWF",
+        flag: "🇷🇼",
+        country: "RW",
+      },
+      goma: {
+        name: "Goma",
+        subtitle: "DRC · border market",
+        currency: "RWF",
+        flag: "🇨🇩",
+        country: "CD",
+        specialBadge: "GOLD HUB",
+        accentBorder: "#EF9F27",
+      },
+      bukavu: {
+        name: "Bukavu",
+        subtitle: "DRC · South Kivu",
+        currency: "RWF",
+        flag: "🇨🇩",
+        country: "CD",
+      },
+      kampala: {
+        name: "Kampala",
+        subtitle: "Uganda · capital market",
+        currency: "UGX",
+        flag: "🇺🇬",
+        country: "UG",
+      },
+      mbarara: {
+        name: "Mbarara",
+        subtitle: "Uganda · western hub",
+        currency: "UGX",
+        flag: "🇺🇬",
+        country: "UG",
+      },
+      rusumo: {
+        name: "Rusumo",
+        subtitle: "Rwanda · Tanzania border",
+        currency: "RWF",
+        flag: "🇷🇼",
+        country: "XB",
+      },
+    };
+
+    // Process spots into cities
+    for (const spot of data.spots) {
+      let cityKey = spot.id.toLowerCase();
+
+      // Map spots to cities
+      if (spot.id === "kimironko" || spot.id === "nyabugogo" || spot.id === "remera") {
+        cityKey = "kigali";
+      } else if (spot.id === "owino") {
+        cityKey = "kampala";
+      }
+
+      const config = cityConfigs[cityKey];
+      if (!config) continue;
+
+      if (!cityMap.has(cityKey)) {
+        cityMap.set(cityKey, {
+          id: cityKey,
+          name: config.name || spot.name,
+          country: config.country || spot.country,
+          flag: config.flag || spot.flag,
+          subtitle: config.subtitle || `${spot.region}`,
+          currency: config.currency || (spot.country === "UG" ? "UGX" : "RWF"),
+          specialBadge: config.specialBadge,
+          accentBorder: config.accentBorder,
+          prices: {},
+        });
+      }
+
+      const city = cityMap.get(cityKey)!;
+      const price = spot.price;
+
+      if (price) {
+        // Update prices, taking the most recent or averaging
+        if (price.maize_rwf) {
+          city.prices.maize = {
+            value: price.maize_rwf,
+            change: price.change_pct || null,
+            reportedAt: price.updated_at,
+          };
+        }
+        if (price.beans_rwf) {
+          city.prices.beans = {
+            value: price.beans_rwf,
+            change: price.change_pct || null,
+          };
+        }
+        if (price.soya_rwf) {
+          city.prices.soya = {
+            value: price.soya_rwf,
+            change: price.change_pct || null,
+          };
+        }
+        if (price.rice_rwf) {
+          city.prices.rice = {
+            value: price.rice_rwf,
+            change: price.change_pct || null,
+          };
+        }
+        if (price.palm_oil_rwf) {
+          city.prices.palm_oil = {
+            value: price.palm_oil_rwf,
+            change: price.change_pct || null,
+          };
+        }
+        // Gold only for specific cities
+        if (price.gold_usd && (cityKey === "kigali" || cityKey === "goma" || cityKey === "bukavu")) {
+          city.prices.gold = {
+            value: price.gold_usd,
+            change: price.change_pct || null,
+            unit: "USD/g",
+          };
+        }
+      }
+    }
+
+    return Array.from(cityMap.values());
+  };
 
   if (loading && !data) {
     return <DashboardSkeleton />;
@@ -116,12 +280,16 @@ export default function DashboardPage() {
 
   if (!data) return null;
 
+  const cityBundles = transformToCityBundles();
   const sortedCommodities = [...data.commodities].sort(
     (a, b) => a.tab_order - b.tab_order
   );
 
+  const isCityFirstView = activeFilter === "all";
+
   const getAvgPrice = (): number => {
-    switch (activeCommodity) {
+    if (activeFilter === "all") return data.kigali_avg_maize;
+    switch (activeFilter) {
       case "maize":
         return data.kigali_avg_maize;
       case "beans":
@@ -136,25 +304,37 @@ export default function DashboardPage() {
   };
 
   const getChangePct = (): number => {
-    const key = `hero_change_${activeCommodity}`;
+    const commodity = activeFilter === "all" ? "maize" : activeFilter;
+    const key = `hero_change_${commodity}`;
     return parseFloat(data.config[key] || "0");
   };
 
-  // Get spread data from config
+  // Get spread data - find biggest spread
   const spreadValue = parseFloat(data.config.spread_usd || "0");
   const spreadStatus = data.config.spread_status || "";
   const spreadIsPositive = spreadValue >= 0;
 
-  // Get first 8 spots + remaining for "Other Markets"
+  // Get active spots for commodity-first view
   const activeSpots = data.spots.filter((s) => s.active);
   const displaySpots = activeSpots.slice(0, 8);
-  const otherSpots = activeSpots.slice(8, 12);
 
   // Top agents for mini leaderboard
   const topAgents = [...data.agents]
     .filter((a) => a.active)
     .sort((a, b) => b.tickets_month - a.tickets_month)
     .slice(0, 3);
+
+  // Filter pills config
+  const filterPills = [
+    { key: "all" as FilterType, label: "All cities", emoji: "🏙️" },
+    ...sortedCommodities
+      .filter((c) => c.status === "live")
+      .map((c) => ({
+        key: c.id as FilterType,
+        label: c.name,
+        emoji: c.icon,
+      })),
+  ];
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
@@ -193,7 +373,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Search box */}
+        {/* Voice search box */}
         <div className="bg-white rounded-2xl border border-[var(--border)] py-3.5 px-5 flex items-center gap-3">
           <Mic size={20} className="text-[var(--ink4)]" />
           <span className="text-sm text-[var(--ink4)]">
@@ -202,40 +382,36 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Commodity Tabs */}
+      {/* Commodity Filter Pills */}
       <div className="flex flex-wrap gap-2">
-        {sortedCommodities.map((commodity: CommodityRow) => {
-          const isActive = activeCommodity === commodity.id;
-          const isLive = commodity.status === "live";
-          const isGold = commodity.id === "gold";
+        {filterPills.map((pill) => {
+          const isActive = activeFilter === pill.key;
 
           return (
             <button
-              key={commodity.id}
-              onClick={() => isLive && setActiveCommodity(commodity.id as CommodityType)}
-              disabled={!isLive}
+              key={pill.key}
+              onClick={() => setActiveFilter(pill.key)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 isActive
                   ? "bg-[var(--orange)] text-white"
-                  : isLive
-                  ? "bg-white border border-[var(--border)] text-[var(--ink3)] hover:border-[var(--green-light)]"
-                  : `bg-white border ${
-                      isGold ? "border-[var(--amber)]" : "border-[var(--border)]"
-                    } text-[var(--ink4)] opacity-65 cursor-not-allowed`
+                  : "bg-white border border-[var(--border)] text-[var(--ink3)] hover:border-[var(--green-light)]"
               }`}
             >
-              {commodity.icon} {commodity.name}
+              {pill.emoji} {pill.label}
             </button>
           );
         })}
       </div>
+
+      {/* Best Price Comparison Card - Only in city-first view */}
+      {isCityFirstView && <BestPriceComparison cities={cityBundles} />}
 
       {/* Hero Section */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-3">
         {/* Main hero card */}
         <HeroCard
           price={getAvgPrice()}
-          commodity={activeCommodity}
+          commodity={activeFilter === "all" ? "maize" : activeFilter}
           changePct={getChangePct()}
         />
 
@@ -301,103 +477,60 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <Grid3X3 size={20} className="text-[var(--green)]" />
             <h2 className="font-outfit font-bold text-lg text-[var(--ink)]">
-              Live {activeCommodity.charAt(0).toUpperCase() + activeCommodity.slice(1).replace("_", " ")}{" "}
-              {
-                {
-                  maize: "🌽",
-                  beans: "🫘",
-                  soya: "🫛",
-                  rice: "🍚",
-                  palm_oil: "🌴",
-                  gold: "🪙",
-                }[activeCommodity]
-              }{" "}
-              Prices
+              {isCityFirstView ? (
+                "Live City Prices"
+              ) : (
+                <>
+                  Live {(activeFilter as string).charAt(0).toUpperCase() + (activeFilter as string).slice(1).replace("_", " ")}{" "}
+                  {
+                    {
+                      maize: "🌽",
+                      beans: "🫘",
+                      soya: "🫛",
+                      rice: "🍚",
+                      palm_oil: "🌴",
+                      gold: "🪙",
+                    }[activeFilter as CommodityType]
+                  }{" "}
+                  Prices
+                </>
+              )}
             </h2>
           </div>
           <span className="text-sm uppercase text-[var(--ink4)]">
-            Values in RWF / UGX
+            {isCityFirstView ? "All commodities" : "Values in RWF / UGX"}
           </span>
         </div>
 
-        {/* Spot grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-          {displaySpots.map((spot: SpotWithPrice) => (
-            <SpotCard key={spot.id} spot={spot} commodity={activeCommodity} />
-          ))}
-
-          {/* Other Markets dark card */}
-          {otherSpots.length > 0 && (
-            <div className="bg-[var(--ink)] rounded-2xl p-4">
-              <div className="flex justify-between items-center mb-4">
-                <span className="font-outfit font-bold text-base text-white">
-                  Other Markets 🌽
-                </span>
-                <Grid3X3 size={16} className="text-white/40" />
-              </div>
-              <div className="space-y-3">
-                {otherSpots.map((spot: SpotWithPrice, idx: number) => {
-                  const priceValue =
-                    activeCommodity === "gold"
-                      ? spot.price?.gold_usd
-                      : spot.price?.maize_rwf;
-                  const changePct = spot.price?.change_pct || 0;
-
-                  return (
-                    <div
-                      key={spot.id}
-                      className={`flex justify-between items-center py-2 ${
-                        idx !== otherSpots.length - 1
-                          ? "border-b border-white/7"
-                          : ""
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{spot.flag}</span>
-                          <span className="font-outfit font-bold text-sm text-white">
-                            {spot.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Volume2 size={10} className="text-white/30" />
-                          <span className="text-xs text-white/30">
-                            Listen to price
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-outfit font-bold text-base text-white">
-                          {priceValue
-                            ? spot.country === "UG"
-                              ? `UGX ${Math.round(priceValue).toLocaleString()}`
-                              : activeCommodity === "gold"
-                              ? `$${priceValue}`
-                              : `RWF ${Math.round(priceValue).toLocaleString()}`
-                            : "—"}
-                        </span>
-                        <div
-                          className={`text-sm font-bold ${
-                            changePct >= 0
-                              ? "text-[var(--green-light)]"
-                              : "text-[var(--red)]"
-                          }`}
-                        >
-                          {changePct >= 0 ? "+" : ""}
-                          {changePct.toFixed(1)}%
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* City-first grid OR Commodity-first grid */}
+        {isCityFirstView ? (
+          // City-first view: 3-column responsive grid of city cards
+          <div
+            className="grid gap-3"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            }}
+          >
+            {cityBundles.map((city) => (
+              <CityCard key={city.id} city={city} />
+            ))}
+          </div>
+        ) : (
+          // Commodity-first view: original SpotCard grid
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {displaySpots.map((spot: SpotWithPrice) => (
+              <SpotCard
+                key={spot.id}
+                spot={spot}
+                commodity={activeFilter as CommodityType}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Coming Soon Section */}
-      {sortedCommodities.some((c: CommodityRow) => c.status === "coming") && (
+      {/* Coming Soon Section - Only in commodity-first view */}
+      {!isCityFirstView && sortedCommodities.some((c: CommodityRow) => c.status === "coming") && (
         <div>
           <div className="flex items-center gap-3 mb-4">
             <span className="text-sm uppercase text-[var(--ink4)]">
@@ -421,7 +554,6 @@ export default function DashboardPage() {
                         : "border-[var(--border)]"
                     }`}
                   >
-                    {/* Blurred placeholder content */}
                     <div className="p-4 filter blur-[5px] opacity-45 pointer-events-none">
                       <p className="text-xs uppercase tracking-wider text-[var(--ink4)]">
                         {commodity.name} Price {commodity.icon}
@@ -434,7 +566,6 @@ export default function DashboardPage() {
                       </p>
                     </div>
 
-                    {/* Overlay */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                       <span
                         className={`px-3 py-1 rounded text-xs uppercase font-bold ${
@@ -476,10 +607,7 @@ export default function DashboardPage() {
                 .slice(0, 2);
 
               return (
-                <div
-                  key={agent.name}
-                  className="flex items-center gap-3"
-                >
+                <div key={agent.name} className="flex items-center gap-3">
                   <span className="font-outfit font-bold text-base text-[var(--green)] w-5">
                     {idx + 1}
                   </span>
@@ -490,9 +618,7 @@ export default function DashboardPage() {
                     <p className="text-sm font-medium text-[var(--ink)]">
                       {agent.name.split(" ")[0]}
                     </p>
-                    <p className="text-xs text-[var(--ink4)]">
-                      {agent.spot_id}
-                    </p>
+                    <p className="text-xs text-[var(--ink4)]">{agent.spot_id}</p>
                   </div>
                   <span className="text-sm font-bold text-[var(--green)]">
                     {agent.accuracy_pct}%
