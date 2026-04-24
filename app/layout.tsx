@@ -35,7 +35,7 @@ export default function RootLayout({
         <Sidebar />
 
         {/* Main Content */}
-        <main className="md:ml-[68px] mb-16 md:mb-0 min-h-screen bg-[var(--surface)] p-4 md:p-5">
+        <main className="md:ml-[68px] mb-16 md:mb-0 min-h-screen bg-[#EDE4D3] p-4 md:p-5">
           {children}
         </main>
 

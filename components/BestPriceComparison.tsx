@@ -1,5 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { AlertTriangle, TrendingUp } from "lucide-react";
+import { type Currency } from "@/components/shared/Pills";
+
 interface PriceData {
   value: number | null;
   change: number | null;
@@ -34,24 +38,152 @@ const commodities = [
   { key: "fuel", name: "Fuel", emoji: "⛽" },
 ];
 
-// Pill styles matching the design system
-const pillStyles = {
-  metadata: "bg-white border border-[rgba(0,0,0,0.08)] rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-500",
-  valueGreen: "bg-white border border-[rgba(0,0,0,0.1)] rounded-full px-2.5 py-1 font-medium text-sm text-[#3B6D11]",
-  valueRed: "bg-white border border-[rgba(0,0,0,0.1)] rounded-full px-2.5 py-1 font-medium text-sm text-[#A32D2D]",
-  spreadHigh: "bg-[#EAF3DE] text-[#3B6D11] rounded-full px-2.5 py-1 text-[11px] font-medium",
-  spreadMedium: "bg-[#FAEEDA] text-[#854F0B] rounded-full px-2.5 py-1 text-[11px] font-medium",
-  spreadLow: "bg-gray-50 text-gray-500 rounded-full px-2.5 py-1 text-[11px] font-medium",
-};
-
 interface CityPrice {
   cityName: string;
   flag: string;
   price: number;
-  currency: string;
+  currency: Currency;
+}
+
+// Simulated FX rate data (TODO: fetch from /api/rates)
+interface FxRateInfo {
+  rate: number;
+  updatedAt: Date;
+  isStale: boolean;
+}
+
+// P2P rates for conversion
+const P2P_RATES: Record<Currency, number> = {
+  RWF: 1,
+  UGX: 0.343,
+  CDF: 0.47,
+  TZS: 0.52,
+  USD: 1280,
+  ETB: 22,
+  KES: 9.5,
+};
+
+function toRWF(value: number, fromCurrency: Currency): number {
+  if (fromCurrency === "RWF") return value;
+  return Math.round(value * P2P_RATES[fromCurrency]);
+}
+
+function useFxRate(): FxRateInfo {
+  const [rateInfo] = useState<FxRateInfo>({
+    rate: 0.343,
+    updatedAt: new Date(),
+    isStale: false,
+  });
+  return rateInfo;
+}
+
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Africa/Kigali",
+  }) + " CAT";
+}
+
+function formatNumber(value: number | null): string {
+  if (value === null) return "—";
+  return value.toLocaleString();
+}
+
+// ============================================================================
+// SEMANTIC PILL COMPONENTS FOR PRICE COMPARISON
+// ============================================================================
+
+// Source city pill (cheapest) - Green
+function SourceCityPill({ flag, name }: { flag: string; name: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 bg-[#C8E6C9] text-[#1B5E20] rounded-full px-[14px] py-[8px] text-[15px] font-semibold">
+      <span className="text-[16px]">{flag}</span>
+      {name}
+    </span>
+  );
+}
+
+// Destination city pill (most expensive) - Blue
+function DestinationCityPill({ flag, name }: { flag: string; name: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 bg-[#BBDEFB] text-[#0D47A1] rounded-full px-[14px] py-[8px] text-[15px] font-semibold">
+      <span className="text-[16px]">{flag}</span>
+      {name}
+    </span>
+  );
+}
+
+// Source price pill - Green (matches source city)
+function SourcePricePill({ value, currency }: { value: number; currency: Currency }) {
+  return (
+    <span className="inline-flex items-baseline gap-1 bg-[#C8E6C9] text-[#1B5E20] rounded-full px-[12px] py-[5px] text-[16px] font-bold tabular-nums">
+      {formatNumber(value)}
+      <span className="text-[11px] font-semibold opacity-85">{currency}</span>
+    </span>
+  );
+}
+
+// Destination price pill - Blue (matches destination city)
+function DestinationPricePill({ value, currency }: { value: number; currency: Currency }) {
+  return (
+    <span className="inline-flex items-baseline gap-1 bg-[#BBDEFB] text-[#0D47A1] rounded-full px-[12px] py-[5px] text-[16px] font-bold tabular-nums">
+      {formatNumber(value)}
+      <span className="text-[11px] font-semibold opacity-85">{currency}</span>
+    </span>
+  );
+}
+
+// RWF conversion pill - Warm cream/peach
+function ConversionPill({ value }: { value: number }) {
+  return (
+    <span className="inline-flex items-baseline gap-1 bg-[#FFE0B2] text-[#BF360C] rounded-full px-[10px] py-[4px] text-[14px] font-bold tabular-nums">
+      <span className="text-[10px] font-semibold opacity-85">≈</span>
+      {formatNumber(value)}
+      <span className="text-[10px] font-semibold opacity-85">RWF</span>
+    </span>
+  );
+}
+
+// Arb percentage pill - Green for high, peach for low
+function ArbPill({ spread }: { spread: number }) {
+  const isHighSpread = spread >= 10;
+
+  if (isHighSpread) {
+    return (
+      <span className="inline-flex items-center gap-1 bg-[#A5D6A7] text-[#1B5E20] rounded-full px-[14px] py-[7px] text-[15px] font-bold">
+        <TrendingUp size={14} />
+        {spread.toFixed(1)}%
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center bg-[#FFF3E0] text-[#E65100] rounded-full px-[14px] py-[7px] text-[15px] font-bold">
+      {spread.toFixed(1)}%
+    </span>
+  );
+}
+
+// Commodity label
+function CommodityLabel({ emoji, name }: { emoji: string; name: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[22px]">{emoji}</span>
+      <span className="text-[17px] font-medium text-gray-700">{name}</span>
+    </div>
+  );
 }
 
 export function BestPriceComparison({ cities }: BestPriceComparisonProps) {
+  const fxRate = useFxRate();
+  const [currentTime, setCurrentTime] = useState(formatTime(fxRate.updatedAt));
+
+  useEffect(() => {
+    setCurrentTime(formatTime(fxRate.updatedAt));
+  }, [fxRate.updatedAt]);
+
   const getBestPrices = (commodityKey: string) => {
     const citiesWithPrice: CityPrice[] = [];
 
@@ -62,7 +194,7 @@ export function BestPriceComparison({ cities }: BestPriceComparisonProps) {
           cityName: city.name,
           flag: city.flag,
           price: priceData.value,
-          currency: city.currency,
+          currency: city.currency as Currency,
         });
       }
     }
@@ -98,93 +230,87 @@ export function BestPriceComparison({ cities }: BestPriceComparisonProps) {
   return (
     <div
       className="rounded-2xl bg-white p-5 mb-4"
-      style={{ border: "0.5px solid rgba(0,0,0,0.08)" }}
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
     >
-      {/* Header */}
+      {/* Card title - LOCKED: 17px weight 500 */}
       <div className="flex items-center gap-2 mb-5">
-        <span className="text-lg">📊</span>
-        <h3 className="font-medium text-base text-[var(--ink)]">
+        <span className="text-[20px]">📊</span>
+        <h3 className="text-[17px] font-medium text-[var(--ink)]">
           Best prices across the region
         </h3>
       </div>
 
       {/* Comparison rows */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {comparisons.map((item) => {
           const { cheapest, mostExpensive, spread } = item.comparison!;
-          const isHighSpread = spread >= 10;
-          const isMediumSpread = spread >= 5 && spread < 10;
+          const cheapestNeedsConversion = cheapest.currency !== "RWF";
+          const expensiveNeedsConversion = mostExpensive.currency !== "RWF";
 
           return (
             <div
               key={item.key}
-              className="flex flex-wrap items-center gap-3 py-2 border-b border-gray-50 last:border-0"
+              className="flex flex-wrap items-center gap-3 py-[16px] border-b border-gray-100 last:border-0"
             >
-              {/* Commodity */}
-              <div className="flex items-center gap-2 w-24">
-                <span className="text-sm">{item.emoji}</span>
-                <span className="text-sm text-gray-700">{item.name}</span>
+              {/* Commodity label - BUMPED: emoji 22px, name 17px */}
+              <div className="w-32">
+                <CommodityLabel emoji={item.emoji} name={item.name} />
               </div>
 
-              {/* Cheapest */}
-              <div className="flex items-center gap-2 flex-1 min-w-[140px]">
-                <span className="text-sm">{cheapest.flag}</span>
-                <span className="text-xs text-gray-600">{cheapest.cityName}</span>
-                <span className={pillStyles.valueGreen}>
-                  {cheapest.price.toLocaleString()}
-                </span>
-                <span className={pillStyles.metadata}>{cheapest.currency}</span>
+              {/* Cheapest city (source) - GREEN */}
+              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                <SourceCityPill flag={cheapest.flag} name={cheapest.cityName} />
+                <SourcePricePill value={cheapest.price} currency={cheapest.currency} />
+                {cheapestNeedsConversion && (
+                  <ConversionPill value={toRWF(cheapest.price, cheapest.currency)} />
+                )}
               </div>
 
-              {/* Most Expensive */}
-              <div className="flex items-center gap-2 flex-1 min-w-[140px]">
-                <span className="text-sm">{mostExpensive.flag}</span>
-                <span className="text-xs text-gray-600">{mostExpensive.cityName}</span>
-                <span className={pillStyles.valueRed}>
-                  {mostExpensive.price.toLocaleString()}
-                </span>
-                <span className={pillStyles.metadata}>{mostExpensive.currency}</span>
+              {/* Most expensive city (destination) - BLUE */}
+              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                <DestinationCityPill flag={mostExpensive.flag} name={mostExpensive.cityName} />
+                <DestinationPricePill value={mostExpensive.price} currency={mostExpensive.currency} />
+                {expensiveNeedsConversion && (
+                  <ConversionPill value={toRWF(mostExpensive.price, mostExpensive.currency)} />
+                )}
               </div>
 
               {/* Spread pill */}
-              <div className="flex items-center">
-                <span
-                  className={
-                    isHighSpread
-                      ? pillStyles.spreadHigh
-                      : isMediumSpread
-                      ? pillStyles.spreadMedium
-                      : pillStyles.spreadLow
-                  }
-                >
-                  <span className="sr-only">
-                    {isHighSpread
-                      ? "Arbitrage opportunity"
-                      : isMediumSpread
-                      ? "Watch opportunity"
-                      : "Normal spread"}
-                  </span>
-                  <span aria-hidden="true">
-                    {isHighSpread && "↗ "}
-                    {spread.toFixed(1)}%
-                  </span>
-                </span>
-              </div>
+              <ArbPill spread={spread} />
             </div>
           );
         })}
       </div>
 
-      {/* Legend */}
+      {/* Legend - Updated colors */}
       <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100">
         <div className="flex items-center gap-2">
-          <span className={pillStyles.spreadHigh}>↗ 10%+</span>
-          <span className="text-xs text-gray-500">Arb opportunity</span>
+          <span className="inline-flex items-center gap-1 bg-[#A5D6A7] text-[#1B5E20] rounded-full px-[10px] py-[4px] text-[13px] font-bold">
+            <TrendingUp size={12} />
+            12.0%
+          </span>
+          <span className="text-[12px] font-medium text-gray-500">Arb opportunity</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className={pillStyles.spreadMedium}>5%+</span>
-          <span className="text-xs text-gray-500">Watch</span>
+          <span className="inline-flex items-center bg-[#FFE0B2] text-[#BF360C] rounded-full px-[10px] py-[4px] text-[13px] font-bold">
+            6.0%
+          </span>
+          <span className="text-[12px] font-medium text-gray-500">Watch</span>
         </div>
+      </div>
+
+      {/* FX source disclosure - TRUST BUILDER */}
+      <div className="mt-4 pt-4 border-t border-gray-50">
+        {fxRate.isStale ? (
+          <p className="text-[12px] font-medium text-[#854F0B] flex items-center gap-1.5">
+            <AlertTriangle size={14} />
+            FX rate may be stale · last updated {currentTime}
+          </p>
+        ) : (
+          <p className="text-[12px] font-medium text-gray-400">
+            UGX converted at today&apos;s P2P mid rate · 1 UGX ≈ {fxRate.rate} RWF · updated {currentTime}
+          </p>
+        )}
       </div>
     </div>
   );

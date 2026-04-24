@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/daily-fix",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/streak-update",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/quorum-check",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/lottery-draw",
+      "schedule": "0 16 * * 0"
+    }
+  ]
+}

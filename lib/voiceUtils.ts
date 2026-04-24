@@ -193,7 +193,7 @@ export function playTapSound(): void {
 
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.1);
-  } catch (e) {
+  } catch {
     // Silent fail - audio feedback is nice-to-have
     console.log('[Voice] Could not play tap sound');
   }

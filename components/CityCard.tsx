@@ -3,6 +3,15 @@
 import { useState, useEffect } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { speakPrices, stopSpeaking, isSpeechSupported, playTapSound } from "@/lib/voiceUtils";
+import {
+  DualCurrency,
+  CurrencyChip,
+  ChangePill,
+  SectionLabelPill,
+  ModifierPill,
+  CommodityLabel,
+  type Currency,
+} from "@/components/shared/Pills";
 
 interface PriceData {
   value: number | null;
@@ -48,18 +57,6 @@ const commodityConfig = [
 
 const goldConfig = { key: "gold", name: "Gold", emoji: "🥇" };
 
-// Pill component styles
-const pillStyles = {
-  metadata: "bg-white border border-[rgba(0,0,0,0.08)] rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-500 tracking-wide",
-  value: "bg-white border border-[rgba(0,0,0,0.1)] rounded-full px-3 py-1 font-medium text-sm text-[var(--ink)] hover:translate-y-[-1px] hover:shadow-sm transition-all",
-  valueGold: "bg-white border border-[#EF9F27] rounded-full px-3 py-1 font-medium text-sm text-[#633806] hover:translate-y-[-1px] hover:shadow-sm transition-all",
-  changePositive: "bg-[#EAF3DE] text-[#3B6D11] rounded-full px-2 py-0.5 text-[11px] font-medium",
-  changeNegative: "bg-[#FCEBEB] text-[#A32D2D] rounded-full px-2 py-0.5 text-[11px] font-medium",
-  changeNeutral: "text-gray-400 text-[11px] font-medium",
-  goldUnit: "bg-[#FAEEDA] text-[#633806] rounded-full px-2 py-0.5 text-[10px] font-medium",
-  goldHubBadge: "bg-[#FAEEDA] text-[#633806] rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
-};
-
 export function CityCard({ city, onReportPrice, onPlayVoice }: CityCardProps) {
   const [isSpeakingState, setIsSpeakingState] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -79,7 +76,6 @@ export function CityCard({ city, onReportPrice, onPlayVoice }: CityCardProps) {
       onPlayVoice?.(city.id);
       speakPrices(city.name, city.prices, city.currency, "en");
 
-      // Reset speaking state when done
       const commodityCount = Object.keys(city.prices).filter(
         (k) => city.prices[k as keyof typeof city.prices]?.value !== null
       ).length;
@@ -98,86 +94,53 @@ export function CityCard({ city, onReportPrice, onPlayVoice }: CityCardProps) {
 
   const hasGold = city.prices.gold?.value !== null && city.prices.gold?.value !== undefined;
   const isGomaStyle = city.specialBadge === "GOLD HUB";
-
-  const formatPrice = (price: PriceData | undefined, isGold = false): string => {
-    if (!price || price.value === null) return "—";
-    if (isGold) {
-      return price.value.toFixed(2);
-    }
-    return price.value.toLocaleString();
-  };
-
-  const renderChangePill = (change: number | null, isGold = false) => {
-    if (change === null || change === undefined) {
-      return <span className={pillStyles.changeNeutral}>—</span>;
-    }
-
-    const isPositive = change > 0;
-    const isNegative = change < 0;
-    const arrow = isPositive ? "↗" : isNegative ? "↘" : "";
-    const srText = isPositive
-      ? `up ${Math.abs(change).toFixed(1)} percent`
-      : isNegative
-      ? `down ${Math.abs(change).toFixed(1)} percent`
-      : "unchanged";
-
-    if (change === 0) {
-      return <span className={pillStyles.changeNeutral}>0%</span>;
-    }
-
-    return (
-      <span
-        className={
-          isPositive ? pillStyles.changePositive : pillStyles.changeNegative
-        }
-      >
-        <span className="sr-only">{srText}</span>
-        <span aria-hidden="true">
-          {arrow} {Math.abs(change).toFixed(1)}%
-        </span>
-      </span>
-    );
-  };
+  const cityCurrency = city.currency as Currency;
 
   return (
     <div
-      className="rounded-2xl p-4"
+      className="rounded-2xl p-5"
       style={{
-        backgroundColor: "#FEF9E7",
+        backgroundColor: "#FFFFFF",
         border: isGomaStyle
           ? "1px solid #EF9F27"
           : "0.5px solid rgba(0,0,0,0.08)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       }}
     >
       {/* Header */}
       <div
-        className="flex justify-between items-start pb-3 mb-3"
+        className="flex justify-between items-start pb-4 mb-4"
         style={{ borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}
       >
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-lg">{city.flag}</span>
-            <span className="font-medium text-base text-[var(--ink)]">
+            {/* Flag emoji BUMPED to 17px */}
+            <span className="text-[17px]">{city.flag}</span>
+            {/* City name BUMPED to 16px weight 500 */}
+            <span className="text-[16px] font-medium text-[var(--ink)]">
               {city.name}
             </span>
             {city.specialBadge && (
-              <span className={pillStyles.goldHubBadge}>
+              <SectionLabelPill variant="light" accentColor="#633806">
                 {city.specialBadge}
-              </span>
+              </SectionLabelPill>
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-1">{city.subtitle}</p>
+          {/* Metadata BUMPED to 12px */}
+          <p className="text-[12px] font-medium text-gray-500 mt-1">{city.subtitle}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Currency metadata pill */}
-          <span className={pillStyles.metadata}>{city.currency}</span>
+          {/* Currency modifier pill */}
+          <ModifierPill parentColor="#3B6D11">
+            {city.currency}
+          </ModifierPill>
 
           {/* Voice button */}
           {speechSupported && (
             <button
               onClick={handleVoiceClick}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                 isSpeakingState
                   ? "bg-[var(--green)] text-white animate-pulse"
                   : "bg-white border border-[rgba(0,0,0,0.08)] text-gray-600 hover:bg-gray-50"
@@ -189,17 +152,17 @@ export function CityCard({ city, onReportPrice, onPlayVoice }: CityCardProps) {
               }
             >
               {isSpeakingState ? (
-                <VolumeX size={16} />
+                <VolumeX size={18} />
               ) : (
-                <Volume2 size={16} />
+                <Volume2 size={18} />
               )}
             </button>
           )}
         </div>
       </div>
 
-      {/* Commodity rows */}
-      <div className="space-y-1.5">
+      {/* Commodity rows - BUMPED row padding to 16px */}
+      <div className="space-y-1">
         {commodityConfig.map((commodity) => {
           const price = city.prices[commodity.key as keyof typeof city.prices];
           const hasPrice = price?.value !== null && price?.value !== undefined;
@@ -207,58 +170,50 @@ export function CityCard({ city, onReportPrice, onPlayVoice }: CityCardProps) {
           return (
             <div
               key={commodity.key}
-              className="flex justify-between items-center py-1.5"
+              className="flex justify-between items-center py-[16px]"
             >
+              {/* Commodity label - BUMPED: emoji 22px, name 17px */}
+              <CommodityLabel emoji={commodity.emoji} name={commodity.name} />
+
               <div className="flex items-center gap-2">
-                <span className="text-sm">{commodity.emoji}</span>
-                <span className="text-sm text-gray-600">{commodity.name}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {/* Price value pill - tappable */}
-                <button
+                {/* DUAL-CURRENCY ENFORCED: non-RWF shows companion RWF chip */}
+                <DualCurrency
+                  value={hasPrice ? price!.value : null}
+                  currency={cityCurrency}
                   onClick={() => handlePriceClick(commodity.key)}
-                  className={pillStyles.value}
-                  aria-label={`${commodity.name} price: ${
-                    hasPrice ? `${formatPrice(price)} ${city.currency}` : "no data"
-                  }. Tap to report update.`}
-                >
-                  {formatPrice(price)}
-                </button>
+                  size="md"
+                />
                 {/* Change pill */}
-                {renderChangePill(price?.change ?? null)}
+                <ChangePill delta={price?.change ?? null} size="sm" showArrow={false} />
               </div>
             </div>
           );
         })}
 
-        {/* Gold row - special styling */}
+        {/* Gold row - USD only, never converts */}
         {hasGold && (
           <div
-            className="flex justify-between items-center pt-3 mt-2"
+            className="flex justify-between items-center pt-4 mt-3"
             style={{ borderTop: "0.5px dashed rgba(0,0,0,0.15)" }}
           >
             <div className="flex items-center gap-2">
-              <span className="text-sm">{goldConfig.emoji}</span>
-              <span className="text-sm font-medium text-[#633806]">
+              <span className="text-[22px]">{goldConfig.emoji}</span>
+              <span className="text-[17px] font-medium text-[#633806]">
                 {goldConfig.name}
               </span>
-              {/* Gold unit badge */}
-              <span className={pillStyles.goldUnit}>USD/g</span>
+              <ModifierPill parentColor="#633806">
+                USD/g
+              </ModifierPill>
             </div>
             <div className="flex items-center gap-2">
-              {/* Gold price pill - orange bordered */}
-              <button
+              {/* Gold always USD - no dual currency */}
+              <CurrencyChip
+                value={city.prices.gold!.value}
+                currency="USD"
                 onClick={() => handlePriceClick("gold")}
-                className={pillStyles.valueGold}
-                aria-label={`Gold price: ${formatPrice(
-                  city.prices.gold,
-                  true
-                )} USD per gram. Tap to report update.`}
-              >
-                {formatPrice(city.prices.gold, true)}
-              </button>
-              {/* Change pill */}
-              {renderChangePill(city.prices.gold?.change ?? null, true)}
+                size="md"
+              />
+              <ChangePill delta={city.prices.gold?.change ?? null} size="sm" showArrow={false} />
             </div>
           </div>
         )}

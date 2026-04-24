@@ -1,13 +1,15 @@
 "use client";
 
-import { MapPin, Volume2, VolumeX, Star, TrendingUp, TrendingDown } from "lucide-react";
+import { Volume2, VolumeX, Star, TrendingUp, TrendingDown } from "lucide-react";
 import { useSpeech } from "@/hooks/useSpeech";
 import type { CommodityType } from "@/lib/types";
+import { SectionLabelPill, EntityPill } from "@/components/shared/Pills";
 
 interface HeroCardProps {
   price: number;
   commodity: CommodityType;
   changePct?: number;
+  currency?: "RWF" | "UGX" | "TZS" | "USD";
 }
 
 const commodityLabels: Record<CommodityType, { name: string; icon: string }> = {
@@ -19,7 +21,7 @@ const commodityLabels: Record<CommodityType, { name: string; icon: string }> = {
   gold: { name: "Gold", icon: "🪙" },
 };
 
-export function HeroCard({ price, commodity, changePct = 0 }: HeroCardProps) {
+export function HeroCard({ price, commodity, changePct = 0, currency = "RWF" }: HeroCardProps) {
   const { speak, isSpeaking, stop } = useSpeech();
   const isPositive = changePct >= 0;
   const commodityInfo = commodityLabels[commodity] || commodityLabels.maize;
@@ -49,30 +51,36 @@ export function HeroCard({ price, commodity, changePct = 0 }: HeroCardProps) {
         )}
       </button>
 
-      {/* Badge */}
-      <div className="inline-flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 mb-4">
-        <Star size={12} className="text-[var(--amber)]" fill="var(--amber)" />
-        <span className="text-xs uppercase tracking-wider text-white/85 font-semibold">
-          Benchmark Average
-        </span>
+      {/* Header pills row - using new pill system */}
+      <div className="flex items-center gap-2 mb-4">
+        {/* Entity pill (location) */}
+        <EntityPill icon="📍" variant="light" accentColor="#374151">
+          Kigali city average
+        </EntityPill>
+        {/* Section label pill */}
+        <SectionLabelPill variant="dark" accentColor="rgba(255,255,255,0.85)">
+          <Star size={12} className="text-[var(--amber)]" fill="var(--amber)" />
+          Benchmark
+        </SectionLabelPill>
       </div>
 
-      {/* Location */}
-      <div className="flex items-center gap-1.5 text-white/65 mb-2">
-        <MapPin size={14} />
-        <span className="text-sm">Kigali City Average</span>
-        <span className="text-lg">{commodityInfo.icon}</span>
+      {/* Commodity entity pill */}
+      <div className="mb-3">
+        <EntityPill icon={commodityInfo.icon} variant="dark" accentColor="rgba(255,255,255,0.75)">
+          {commodityInfo.name}
+        </EntityPill>
       </div>
 
-      {/* Price */}
-      <div className="font-outfit font-black text-[72px] text-white leading-none price-display mb-2 relative z-10">
-        {price.toLocaleString()} <span className="text-4xl">RWF</span>
+      {/* Price - LOCKED: 76px hero number, 34px currency */}
+      <div className="font-outfit font-bold text-[76px] text-white leading-none price-display mb-3 relative z-10">
+        {price.toLocaleString()}
+        <span className="text-[34px] font-bold ml-2">{currency}</span>
       </div>
 
-      {/* Change pill */}
+      {/* Delta pill - status pill variant */}
       {changePct !== 0 && (
         <div
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${
+          className={`inline-flex items-center gap-1.5 px-[14px] py-[7px] rounded-full ${
             isPositive ? "bg-[var(--green-light)]" : "bg-[var(--red)]"
           }`}
         >
@@ -81,7 +89,7 @@ export function HeroCard({ price, commodity, changePct = 0 }: HeroCardProps) {
           ) : (
             <TrendingDown size={14} className="text-white" />
           )}
-          <span className="text-sm font-bold text-white">
+          <span className="text-[14px] font-bold text-white">
             {isPositive ? "+" : ""}
             {changePct.toFixed(1)}%
           </span>

@@ -19,6 +19,15 @@
   --border: #E5E7EB;
   --surface: #F0F2F5;
   --white: #FFFFFF;
+
+  /* Currency Color System - Global Lock */
+  --ccy-rwf-bg: #EAF3DE;  --ccy-rwf-fg: #3B6D11;  /* Rwanda green */
+  --ccy-ugx-bg: #E6F1FB;  --ccy-ugx-fg: #185FA5;  /* Uganda blue */
+  --ccy-cdf-bg: #FAEEDA;  --ccy-cdf-fg: #854F0B;  /* DRC amber */
+  --ccy-tzs-bg: #FBE4E4;  --ccy-tzs-fg: #8F2222;  /* Tanzania red */
+  --ccy-usd-bg: #F1EFE8;  --ccy-usd-fg: #444441;  /* USD neutral */
+  --ccy-etb-bg: #FAECE7;  --ccy-etb-fg: #4A1B0C;  /* Ethiopia reserved */
+  --ccy-kes-bg: #FBEAF0;  --ccy-kes-fg: #72243E;  /* Kenya reserved */
 }
 
 * {

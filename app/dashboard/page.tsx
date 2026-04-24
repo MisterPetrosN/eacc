@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Mic,
@@ -68,31 +68,44 @@ export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [countdown, setCountdown] = useState("");
 
-  const fetchDashboard = useCallback(async () => {
-    try {
-      const res = await fetch("/api/dashboard");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const newData = await res.json();
-      setData(newData);
-      setError(null);
-      setStale(false);
-    } catch (err) {
-      console.error("Dashboard fetch error:", err);
-      if (data) {
-        setStale(true);
-      } else {
-        setError("Failed to load dashboard data");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [data]);
-
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch("/api/dashboard");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const newData = await res.json();
+        if (isMounted) {
+          setData(newData);
+          setError(null);
+          setStale(false);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+        if (isMounted) {
+          setData((prevData) => {
+            if (prevData) {
+              setStale(true);
+            } else {
+              setError("Failed to load dashboard data");
+            }
+            return prevData;
+          });
+          setLoading(false);
+        }
+      }
+    };
+
     fetchDashboard();
     const interval = setInterval(fetchDashboard, 60000);
-    return () => clearInterval(interval);
-  }, [fetchDashboard]);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Countdown to Sunday 6pm EAT
   useEffect(() => {
@@ -216,7 +229,7 @@ export default function DashboardPage() {
           city.prices.maize = {
             value: price.maize_rwf,
             change: price.change_pct || null,
-            reportedAt: price.updated_at,
+            reportedAt: price.updated_at ?? undefined,
           };
         }
         if (price.beans_rwf) {
@@ -268,7 +281,7 @@ export default function DashboardPage() {
           <AlertCircle size={48} className="mx-auto mb-4 text-[var(--red)]" />
           <p className="text-[var(--ink2)]">{error}</p>
           <button
-            onClick={fetchDashboard}
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-[var(--green)] text-white rounded-lg"
           >
             Retry
@@ -350,9 +363,9 @@ export default function DashboardPage() {
 
       {/* Top Bar */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* Greeting pill */}
-        <div className="bg-white rounded-2xl border border-[var(--border)] py-3 px-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[var(--green)] flex items-center justify-center">
+        {/* Greeting pill - Marigold yellow */}
+        <div className="bg-[#F4B400] rounded-2xl py-3 px-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center">
             <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
               <path
                 d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
@@ -361,20 +374,20 @@ export default function DashboardPage() {
             </svg>
           </div>
           <div>
-            <p className="font-outfit font-bold text-lg text-[var(--ink)]">
+            <p className="font-outfit font-bold text-lg text-black">
               {data.config.greeting || "Good morning"}
             </p>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm text-[var(--green-light)]">
+              <span className="text-sm text-black/70">
                 EACC Intelligence · {data.active_agents} Agents Live Now
               </span>
-              <span className="w-2.5 h-2.5 rounded-full bg-[var(--green-light)] live-pulse" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] live-pulse" />
             </div>
           </div>
         </div>
 
-        {/* Voice search box */}
-        <div className="bg-white rounded-2xl border border-[var(--border)] py-3.5 px-5 flex items-center gap-3">
+        {/* Voice search box - White with subtle warm border */}
+        <div className="bg-white rounded-2xl border border-[#E8DCC4] py-3.5 px-5 flex items-center gap-3">
           <Mic size={20} className="text-[var(--ink4)]" />
           <span className="text-sm text-[var(--ink4)]">
             Ask &quot;What is the price in Goma?&quot;
@@ -394,7 +407,7 @@ export default function DashboardPage() {
               className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-all tracking-wide ${
                 isActive
                   ? "bg-[#EF9F27] text-[#4A1B0C]"
-                  : "bg-white border border-[rgba(0,0,0,0.08)] text-gray-500 hover:border-[rgba(0,0,0,0.15)]"
+                  : "bg-[#FAF6EE] border border-[#E8DCC4] text-gray-600 hover:border-[#D4C4A8]"
               }`}
               aria-pressed={isActive}
             >
@@ -440,7 +453,8 @@ export default function DashboardPage() {
           {/* Spread card */}
           <Link
             href="/spread"
-            className="bg-white rounded-2xl border-[1.5px] border-[var(--border)] p-4 hover:border-[var(--orange)] hover:translate-x-0.5 transition-all"
+            className="bg-white rounded-2xl border border-[rgba(0,0,0,0.08)] p-4 hover:border-[var(--orange)] hover:translate-x-0.5 transition-all"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
           >
             <div className="flex justify-between items-start mb-1">
               <span className="text-xs uppercase tracking-wider text-[var(--ink3)]">
@@ -559,11 +573,12 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={commodity.id}
-                    className={`rounded-2xl border bg-white overflow-hidden min-h-[120px] relative ${
+                    className={`rounded-2xl border overflow-hidden min-h-[120px] relative ${
                       isGold
                         ? "border-[var(--amber)] bg-[var(--amber-bg)]"
-                        : "border-[var(--border)]"
+                        : "border-[rgba(0,0,0,0.08)] bg-white"
                     }`}
+                    style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
                   >
                     <div className="p-4 filter blur-[5px] opacity-45 pointer-events-none">
                       <p className="text-xs uppercase tracking-wider text-[var(--ink4)]">
@@ -601,7 +616,7 @@ export default function DashboardPage() {
       {/* Bottom Strip */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Mini leaderboard */}
-        <div className="bg-white rounded-2xl border border-[var(--border)] p-5">
+        <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.08)] p-5" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
           <div className="flex items-center gap-2 mb-4">
             <Trophy size={20} className="text-[var(--green)]" />
             <span className="font-outfit font-bold text-base text-[var(--ink)]">
@@ -650,7 +665,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Prize pool card */}
-        <div className="bg-white rounded-2xl border border-[var(--border)] p-5">
+        <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.08)] p-5" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
           <div className="flex items-center gap-2 mb-4">
             <Ticket size={20} className="text-[var(--amber)]" />
             <span className="font-outfit font-bold text-base text-[var(--ink)]">
