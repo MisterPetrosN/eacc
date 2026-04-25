@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Mic,
   Trophy,
   Ticket,
   ChevronRight,
@@ -16,6 +15,7 @@ import { SpotCard } from "@/components/SpotCard";
 import { CityCard } from "@/components/CityCard";
 import { BestPricesTop } from "@/components/BestPricesTop";
 import { BestPriceComparison } from "@/components/BestPriceComparison";
+import { KigaliInfoStrip } from "@/components/KigaliInfoStrip";
 import { DashboardSkeleton } from "@/components/Skeleton";
 import type {
   DashboardData,
@@ -387,13 +387,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Voice search box - White with subtle warm border */}
-        <div className="bg-white rounded-2xl border border-[#E8DCC4] py-3.5 px-5 flex items-center gap-3">
-          <Mic size={20} className="text-[var(--ink4)]" />
-          <span className="text-sm text-[var(--ink4)]">
-            Ask &quot;What is the price in Goma?&quot;
-          </span>
-        </div>
+        {/* Kigali Info Strip - Time, Weather, Forecast */}
+        <KigaliInfoStrip />
       </div>
 
       {/* Commodity Filter Pills - using pill design system */}
