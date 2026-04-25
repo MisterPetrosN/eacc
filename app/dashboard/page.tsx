@@ -14,6 +14,7 @@ import {
 import { HeroCard } from "@/components/HeroCard";
 import { SpotCard } from "@/components/SpotCard";
 import { CityCard } from "@/components/CityCard";
+import { BestPricesTop } from "@/components/BestPricesTop";
 import { BestPriceComparison } from "@/components/BestPriceComparison";
 import { DashboardSkeleton } from "@/components/Skeleton";
 import type {
@@ -417,8 +418,8 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Best Price Comparison Card - Only in city-first view */}
-      {isCityFirstView && <BestPriceComparison cities={cityBundles} />}
+      {/* Best Prices Top - Simplified highest prices only */}
+      {isCityFirstView && <BestPricesTop cities={cityBundles} />}
 
       {/* Hero Section */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-3">
@@ -519,13 +520,8 @@ export default function DashboardPage() {
 
         {/* City-first grid OR Commodity-first grid */}
         {isCityFirstView ? (
-          // City-first view: 3-column responsive grid of city cards
-          <div
-            className="grid gap-3"
-            style={{
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-            }}
-          >
+          // City-first view: 2-column fixed grid (3×2 layout on desktop)
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {cityBundles.map((city) => (
               <CityCard
                 key={city.id}
@@ -612,6 +608,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Arb Opportunities - Full comparison at footer */}
+      {isCityFirstView && <BestPriceComparison cities={cityBundles} />}
 
       {/* Bottom Strip */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
