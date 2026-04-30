@@ -19,16 +19,16 @@ interface WeatherData {
 // CONSTANTS
 // ============================================================================
 
-// WMO Weather Codes mapping
+// WMO Weather Codes mapping - brightened colors for dark background
 const getWeatherInfo = (code: number): { icon: typeof Sun; label: string; color: string } => {
-  if (code === 0) return { icon: Sun, label: "Clear sky", color: "#F59E0B" };
-  if (code >= 1 && code <= 3) return { icon: Cloud, label: "Partly cloudy", color: "#6B7280" };
-  if (code >= 45 && code <= 48) return { icon: Cloud, label: "Foggy", color: "#9CA3AF" };
-  if (code >= 51 && code <= 67) return { icon: CloudRain, label: "Rain", color: "#0D47A1" };
-  if (code >= 71 && code <= 77) return { icon: CloudSnow, label: "Snow", color: "#60A5FA" };
-  if (code >= 80 && code <= 82) return { icon: CloudRain, label: "Showers", color: "#0D47A1" };
-  if (code >= 95 && code <= 99) return { icon: Zap, label: "Thunderstorm", color: "#7C3AED" };
-  return { icon: Cloud, label: "Cloudy", color: "#6B7280" };
+  if (code === 0) return { icon: Sun, label: "Clear sky", color: "#FBBF24" }; // Brighter amber
+  if (code >= 1 && code <= 3) return { icon: Cloud, label: "Partly cloudy", color: "#D1D5DB" }; // Light grey for dark bg
+  if (code >= 45 && code <= 48) return { icon: Cloud, label: "Foggy", color: "#D1D5DB" };
+  if (code >= 51 && code <= 67) return { icon: CloudRain, label: "Rain", color: "#60A5FA" }; // Brighter blue
+  if (code >= 71 && code <= 77) return { icon: CloudSnow, label: "Snow", color: "#93C5FD" };
+  if (code >= 80 && code <= 82) return { icon: CloudRain, label: "Showers", color: "#60A5FA" };
+  if (code >= 95 && code <= 99) return { icon: Zap, label: "Thunderstorm", color: "#A78BFA" };
+  return { icon: Cloud, label: "Cloudy", color: "#D1D5DB" };
 };
 
 // ============================================================================
@@ -65,22 +65,22 @@ function isMarketOpen(date: Date): boolean {
 }
 
 // ============================================================================
-// SUB-COMPONENTS
+// SUB-COMPONENTS - DARK THEME
 // ============================================================================
 
 function Divider() {
-  return <div className="w-px h-8 bg-[#E8DCC4]" />;
+  return <div className="w-px h-8" style={{ backgroundColor: "rgba(255,255,255,0.15)" }} />;
 }
 
 function TimeSegment({ time, date }: { time: string; date: string }) {
   return (
     <div className="flex items-center gap-2">
-      <Clock size={16} className="text-[#1B5E20]" />
+      <Clock size={16} className="text-[#34D399]" /> {/* Brighter green */}
       <div>
-        <div className="text-[18px] font-bold text-black tabular-nums leading-tight">
+        <div className="text-[18px] font-bold text-white tabular-nums leading-tight">
           {time}
         </div>
-        <div className="text-[11px] text-[#4A4A4A]">CAT · {date}</div>
+        <div className="text-[11px] text-[#9CA3AF]">CAT · {date}</div>
       </div>
     </div>
   );
@@ -98,12 +98,12 @@ function WeatherSegment({
   if (loading || temperature === null || weatherCode === null) {
     return (
       <div className="flex items-center gap-2">
-        <Cloud size={16} className="text-[#6B7280]" />
+        <Cloud size={16} className="text-[#D1D5DB]" />
         <div>
-          <div className="text-[18px] font-bold text-black tabular-nums leading-tight">
+          <div className="text-[18px] font-bold text-white tabular-nums leading-tight">
             --°C
           </div>
-          <div className="text-[11px] text-[#4A4A4A]">Kigali · Loading...</div>
+          <div className="text-[11px] text-[#9CA3AF]">Kigali · Loading...</div>
         </div>
       </div>
     );
@@ -115,10 +115,10 @@ function WeatherSegment({
     <div className="flex items-center gap-2">
       <WeatherIcon size={16} style={{ color }} />
       <div>
-        <div className="text-[18px] font-bold text-black tabular-nums leading-tight">
+        <div className="text-[18px] font-bold text-white tabular-nums leading-tight">
           {Math.round(temperature)}°C
         </div>
-        <div className="text-[11px] text-[#4A4A4A]">Kigali · {label}</div>
+        <div className="text-[11px] text-[#9CA3AF]">Kigali · {label}</div>
       </div>
     </div>
   );
@@ -138,24 +138,25 @@ function ForecastSegment({
   if (loading || highTemp === null || lowTemp === null) {
     return (
       <div className="flex items-center gap-2">
-        <Thermometer size={16} className="text-[#6B7280]" />
+        <Thermometer size={16} className="text-[#D1D5DB]" />
         <div>
-          <div className="text-[14px] font-bold text-black tabular-nums leading-tight">
+          <div className="text-[14px] font-bold text-white tabular-nums leading-tight">
             H --° · L --°
           </div>
-          <div className="text-[11px] text-[#4A4A4A]">--% rain</div>
+          <div className="text-[11px] text-[#9CA3AF]">--% rain</div>
         </div>
       </div>
     );
   }
 
-  const rainColor = (rainChance ?? 0) > 50 ? "#0D47A1" : "#4A4A4A";
+  // Brighter blue for rain percentage on dark bg
+  const rainColor = (rainChance ?? 0) > 50 ? "#60A5FA" : "#93C5FD";
 
   return (
     <div className="flex items-center gap-2">
-      <Droplets size={16} className="text-[#0D47A1]" />
+      <Droplets size={16} className="text-[#60A5FA]" /> {/* Brighter blue */}
       <div>
-        <div className="text-[14px] font-bold text-black tabular-nums leading-tight">
+        <div className="text-[14px] font-bold text-white tabular-nums leading-tight">
           H {Math.round(highTemp)}° · L {Math.round(lowTemp)}°
         </div>
         <div className="text-[11px]" style={{ color: rainColor }}>
@@ -170,9 +171,9 @@ function MarketSession({ isOpen }: { isOpen: boolean }) {
   return (
     <div className="flex items-center gap-1.5">
       <span
-        className={`w-2 h-2 rounded-full ${isOpen ? "bg-[#10B981]" : "bg-[#F59E0B]"}`}
+        className={`w-2 h-2 rounded-full ${isOpen ? "bg-[#10B981]" : "bg-[#FBBF24]"}`}
       />
-      <span className="text-[11px] font-medium text-[#4A4A4A]">
+      <span className="text-[11px] font-medium text-white">
         {isOpen ? "Market Open" : "Closed"}
       </span>
     </div>
@@ -180,7 +181,7 @@ function MarketSession({ isOpen }: { isOpen: boolean }) {
 }
 
 // ============================================================================
-// MAIN COMPONENT
+// MAIN COMPONENT - BLACK BACKGROUND
 // ============================================================================
 
 export function KigaliInfoStrip() {
@@ -240,8 +241,12 @@ export function KigaliInfoStrip() {
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#E8DCC4] py-3 px-4 flex items-center justify-between gap-4"
-      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+      className="rounded-2xl py-3 px-4 flex items-center justify-between gap-4"
+      style={{
+        backgroundColor: "#0a0a0a",
+        // Subtle inner highlight on top edge for premium depth
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
+      }}
     >
       {/* Desktop: all segments */}
       <div className="hidden sm:flex items-center gap-4">

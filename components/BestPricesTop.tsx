@@ -1,12 +1,12 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { type Currency } from "@/components/shared/Pills";
 import {
   PRIMARY_CURRENCY,
   toRWF,
   formatNumber,
   CommodityEmoji,
-  CurrencyTicker,
 } from "@/components/shared/PriceDisplay";
 
 // ============================================================================
@@ -50,11 +50,14 @@ interface HighestPrice {
 // CONSTANTS
 // ============================================================================
 
+// All 7 commodities
 const commodities = [
   { key: "maize", name: "Maize", emoji: "🌽" },
   { key: "beans", name: "Beans", emoji: "🫘" },
   { key: "rice", name: "Rice", emoji: "🍚" },
   { key: "igitoki", name: "Igitoki", emoji: "🍌" },
+  { key: "irish_potatoes", name: "Irish potatoes", emoji: "🥔" },
+  { key: "sweet_potatoes", name: "Sweet potatoes", emoji: "🍠" },
   { key: "fuel", name: "Fuel", emoji: "⛽" },
 ];
 
@@ -74,8 +77,12 @@ function BestPill() {
   );
 }
 
-// Single commodity card - shows only the highest price market
-// FIXED: RWF is always primary, original currency is secondary
+// ============================================================================
+// BEST PRICE CARD - FINANCIAL DASHBOARD LAYOUT
+// Top: emoji+name LEFT, BEST pill TOP-RIGHT (metadata row)
+// Middle: price CENTERED (hero element)
+// Bottom: UGX conversion + market location centered
+// ============================================================================
 function BestPriceCard({
   emoji,
   name,
@@ -89,51 +96,49 @@ function BestPriceCard({
 
   return (
     <article
-      className="rounded-xl flex flex-col justify-between"
+      className="rounded-xl flex flex-col flex-shrink-0"
       style={{
         backgroundColor: "#FEF9E7",
         border: "0.5px solid rgba(0,0,0,0.08)",
-        padding: "12px 14px",
-        minHeight: "90px",
+        padding: "16px 20px",
+        minHeight: "130px",
+        width: "220px",
       }}
       aria-label={`${name}: highest price at ${market.cityName}, ${formatNumber(market.rwfPrice)} RWF`}
     >
-      {/* Top row: commodity name + BEST pill */}
+      {/* TOP ROW: commodity name (left) + BEST pill (right) */}
       <div className="flex justify-between items-center mb-2">
-        <div className="flex items-center gap-2">
-          <CommodityEmoji emoji={emoji} />
-          <span className="text-[14px] font-medium text-[var(--ink)]">
+        <div className="flex items-center gap-1.5">
+          <CommodityEmoji emoji={emoji} className="text-[1rem]" />
+          <span className="text-[14px] font-normal text-gray-500">
             {name}
           </span>
         </div>
         <BestPill />
       </div>
 
-      {/* Bottom row: market (left) + price (right) */}
-      <div className="flex justify-between items-end">
-        {/* Market name */}
-        <div className="text-[11px] font-medium" style={{ color: "#3B6D11" }}>
-          {market.flag} {market.cityName}
+      {/* MIDDLE: Price CENTERED - HERO ELEMENT (matches city card sizes) */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+        {/* PRIMARY: Always RWF - centered, HERO SIZE matching city cards */}
+        <div className="font-outfit text-[28px] md:text-[44px] font-black text-[var(--ink)] leading-none text-center">
+          {formatNumber(market.rwfPrice)}
+          <span className="text-[11px] md:text-[13px] font-semibold ml-1 text-gray-500 align-baseline">RWF</span>
         </div>
 
-        {/* Price: RWF primary (large), original currency secondary (small) */}
-        <div className="flex flex-col items-end gap-1">
-          {/* PRIMARY: Always RWF */}
-          <div className="text-[var(--text-price)] font-bold text-[var(--ink)] leading-none">
-            {formatNumber(market.rwfPrice)}
-            <CurrencyTicker currency="RWF" size="sm" className="ml-1 text-gray-500" />
-          </div>
+        {/* SECONDARY: UGX conversion pill centered below price */}
+        {isNonRWF && (
+          <span
+            className="text-[11px] font-medium px-2 py-0.5 rounded-full mt-1.5"
+            style={{ backgroundColor: "#E6F1FB", color: "#185FA5" }}
+          >
+            ≈ {formatNumber(market.price)} {market.currency}
+          </span>
+        )}
+      </div>
 
-          {/* SECONDARY: Original currency if not RWF */}
-          {isNonRWF && (
-            <span
-              className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#E6F1FB", color: "#185FA5" }}
-            >
-              ≈ {formatNumber(market.price)} {market.currency}
-            </span>
-          )}
-        </div>
+      {/* BOTTOM: Market location centered */}
+      <div className="text-[11px] font-medium text-center mt-2" style={{ color: "#3B6D11" }}>
+        {market.flag} {market.cityName}
       </div>
     </article>
   );
@@ -144,6 +149,26 @@ function BestPriceCard({
 // ============================================================================
 
 export function BestPricesTop({ cities }: BestPricesTopProps) {
+  const [isPaused, setIsPaused] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollWidth, setScrollWidth] = useState(0);
+
+  // Measure scroll width for animation
+  useEffect(() => {
+    if (scrollRef.current) {
+      // Get width of one set of items (half the total since we duplicate)
+      const children = scrollRef.current.children;
+      if (children.length > 0) {
+        let width = 0;
+        const halfCount = Math.floor(children.length / 2);
+        for (let i = 0; i < halfCount; i++) {
+          width += (children[i] as HTMLElement).offsetWidth + 12; // 12px gap
+        }
+        setScrollWidth(width);
+      }
+    }
+  }, [cities]);
+
   // Find the highest price market for each commodity (by RWF value)
   const getHighestPrice = (commodityKey: string): HighestPrice | null => {
     let highest: HighestPrice | null = null;
@@ -183,6 +208,9 @@ export function BestPricesTop({ cities }: BestPricesTopProps) {
     return null;
   }
 
+  // Duplicate items for seamless loop
+  const tickerItems = [...bestPrices, ...bestPrices];
+
   return (
     <section className="mb-4" aria-label="Best prices across the region">
       {/* Header */}
@@ -198,20 +226,44 @@ export function BestPricesTop({ cities }: BestPricesTopProps) {
         </p>
       </div>
 
-      {/* Card grid */}
+      {/* Scrolling ticker container */}
       <div
-        className="grid gap-3"
-        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}
+        className="overflow-hidden"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
       >
-        {bestPrices.map((item) => (
-          <BestPriceCard
-            key={item.key}
-            emoji={item.emoji}
-            name={item.name}
-            market={item.highest!}
-          />
-        ))}
+        <div
+          ref={scrollRef}
+          className="flex gap-3"
+          style={{
+            animation: scrollWidth > 0 ? `ticker 35s linear infinite` : 'none',
+            animationPlayState: isPaused ? 'paused' : 'running',
+          }}
+        >
+          {tickerItems.map((item, index) => (
+            <BestPriceCard
+              key={`${item.key}-${index}`}
+              emoji={item.emoji}
+              name={item.name}
+              market={item.highest!}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* CSS animation */}
+      <style jsx>{`
+        @keyframes ticker {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-${scrollWidth}px);
+          }
+        }
+      `}</style>
     </section>
   );
 }

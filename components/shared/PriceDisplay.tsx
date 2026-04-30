@@ -109,8 +109,8 @@ export function PriceDisplay({
 
   return (
     <div className={`flex flex-col items-end gap-1 ${className}`}>
-      {/* Primary: Always RWF */}
-      <div className={`${primarySizeClasses[primarySize]} font-bold leading-none text-[var(--ink)]`}>
+      {/* Primary: Always RWF - EXTRA BOLD (900) */}
+      <div className={`font-outfit ${primarySizeClasses[primarySize]} font-black leading-none text-[var(--ink)]`}>
         {formatNumber(rwfPrice)}
         <CurrencyTicker currency="RWF" size="sm" className="ml-1 text-[var(--ink4)]" />
       </div>

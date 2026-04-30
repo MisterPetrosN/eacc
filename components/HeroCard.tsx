@@ -71,10 +71,10 @@ export function HeroCard({ price, commodity, changePct = 0, currency = "RWF" }: 
         </EntityPill>
       </div>
 
-      {/* Price - LOCKED: 76px hero number, 34px currency */}
-      <div className="font-outfit font-bold text-[76px] text-white leading-none price-display mb-3 relative z-10">
+      {/* Price - LOCKED: 76px hero number, 34px currency, EXTRA BOLD (900) */}
+      <div className="font-outfit font-black text-[76px] text-white leading-none price-display mb-3 relative z-10">
         {price.toLocaleString()}
-        <span className="text-[34px] font-bold ml-2">{currency}</span>
+        <span className="text-[34px] font-black ml-2">{currency}</span>
       </div>
 
       {/* Delta pill - status pill variant */}

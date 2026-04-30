@@ -6,7 +6,6 @@ import {
   toRWF,
   formatNumber,
   CommodityEmoji,
-  CurrencyTicker,
   CurrencyBadge,
   ChangeIndicator,
 } from "@/components/shared/PriceDisplay";
@@ -67,8 +66,10 @@ const commodityConfig = [
 // ============================================================================
 
 // ============================================================================
-// COMMODITY TILE - CORNER POSITIONING LAYOUT
-// RWF is ALWAYS primary (large), other currencies are secondary (small)
+// COMMODITY TILE - FINANCIAL DASHBOARD LAYOUT (Bloomberg/TradingView style)
+// Top: emoji+name LEFT, % TOP-RIGHT (metadata row)
+// Middle: price CENTERED (hero element)
+// Bottom: UGX conversion centered (if applicable)
 // ============================================================================
 
 function CommodityTile({
@@ -98,104 +99,103 @@ function CommodityTile({
   return (
     <button
       onClick={onClick}
-      className="text-left rounded-lg transition-all hover:opacity-90 active:scale-[0.98] flex flex-col justify-between"
+      className="text-left rounded-lg transition-all hover:opacity-90 active:scale-[0.98] flex flex-col"
       style={{
         backgroundColor: bgColor,
-        padding: "8px 10px",
-        minHeight: "100px",
+        padding: "16px",
+        minHeight: "115px",
       }}
       aria-label={`${name}: ${formatNumber(rwfPrice)} RWF${!isRWF ? `, approximately ${formatNumber(price)} ${currency}` : ""}`}
     >
-      {/* TOP ROW: Label (left) + Price (right) */}
-      <div className="flex items-start justify-between gap-1.5">
+      {/* TOP ROW: Label (left) + Percent change (right) - METADATA */}
+      <div className="flex items-center justify-between gap-1.5 mb-2">
         {/* Left: emoji + name */}
         <div className="flex items-center gap-1.5">
-          <CommodityEmoji emoji={emoji} className="text-[1.25rem] md:text-[1.5rem]" />
-          <span className="text-[12px] font-normal" style={{ color: labelColor }}>
+          <CommodityEmoji emoji={emoji} className="text-[1rem] md:text-[1.125rem]" />
+          <span className="text-[14px] md:text-[16px] font-normal" style={{ color: labelColor }}>
             {name}
           </span>
         </div>
 
-        {/* Right: Price hero - RWF ALWAYS PRIMARY */}
-        <div className="flex flex-col items-end gap-1">
-          {/* PRIMARY: Always RWF */}
-          <div className="text-[var(--text-price)] font-bold leading-none" style={{ color: priceColor }}>
-            {formatNumber(rwfPrice)}
-            <CurrencyTicker currency="RWF" size="sm" className="ml-0.5 text-gray-500" />
-          </div>
-
-          {/* SECONDARY: Original currency if not RWF */}
-          {!isRWF && (
-            <span
-              className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#FFFFFF", color: "#185FA5" }}
-            >
-              ≈ {formatNumber(price)} {currency}
-            </span>
-          )}
-        </div>
+        {/* Right: Percent change */}
+        <ChangeIndicator change={change} />
       </div>
 
-      {/* BOTTOM ROW: Percent change (left) */}
-      <div className="flex justify-between items-end">
-        <ChangeIndicator change={change} />
+      {/* MIDDLE: Price CENTERED - HERO ELEMENT */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+        {/* PRIMARY: Always RWF - centered, hero size, EXTRA BOLD (900) */}
+        {/* Use 28px on mobile for 4-digit prices to avoid cramping */}
+        <div className="font-outfit text-[28px] md:text-[44px] font-black leading-none text-center" style={{ color: priceColor }}>
+          {formatNumber(rwfPrice)}
+          <span className="text-[11px] md:text-[13px] font-semibold ml-1 text-gray-500 align-baseline">RWF</span>
+        </div>
+
+        {/* SECONDARY: UGX conversion pill centered below price */}
+        {!isRWF && (
+          <span
+            className="text-[11px] font-medium px-2 py-0.5 rounded-full mt-2"
+            style={{ backgroundColor: "#FFFFFF", color: "#185FA5" }}
+          >
+            ≈ {formatNumber(price)} {currency}
+          </span>
+        )}
       </div>
     </button>
   );
 }
 
-// Empty tile - same structure for alignment
+// Empty tile - financial dashboard layout
 function EmptyTile({ emoji, name }: { emoji: string; name: string }) {
   return (
     <div
-      className="rounded-lg flex flex-col justify-between opacity-55"
+      className="rounded-lg flex flex-col opacity-55"
       style={{
         backgroundColor: "var(--surface, #F0F2F5)",
-        padding: "8px 10px",
-        minHeight: "100px",
+        padding: "16px",
+        minHeight: "115px",
       }}
     >
-      {/* TOP ROW */}
-      <div className="flex items-start justify-between gap-1.5">
-        {/* Left: emoji + name */}
+      {/* TOP ROW: Label (left) + placeholder % (right) */}
+      <div className="flex items-center justify-between gap-1.5 mb-2">
         <div className="flex items-center gap-1.5">
-          <CommodityEmoji emoji={emoji} className="text-[1.25rem] md:text-[1.5rem]" />
-          <span className="text-[12px] font-normal text-gray-500">{name}</span>
+          <CommodityEmoji emoji={emoji} className="text-[1rem] md:text-[1.125rem]" />
+          <span className="text-[14px] md:text-[16px] font-normal text-gray-500">{name}</span>
         </div>
-        {/* Right: em-dash where price would be */}
-        <span className="text-[var(--text-price)] font-bold text-gray-400 leading-none">—</span>
+        <span className="text-[11px] text-gray-400">—</span>
       </div>
 
-      {/* BOTTOM ROW */}
-      <div className="flex justify-between items-end">
-        <span className="text-[11px] text-gray-400">—</span>
+      {/* MIDDLE: em-dash centered where price would be */}
+      <div className="flex-1 flex items-center justify-center">
+        <span className="font-outfit text-[28px] md:text-[44px] font-black text-gray-400 leading-none">—</span>
       </div>
     </div>
   );
 }
 
-// Coming Soon tile - blurred with overlay
+// Coming Soon tile - financial dashboard layout with blur
 function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
   return (
     <div
       className="rounded-lg relative overflow-hidden"
       style={{
         backgroundColor: "var(--surface, #F0F2F5)",
-        padding: "8px 10px",
-        minHeight: "100px",
+        padding: "16px",
+        minHeight: "115px",
       }}
     >
-      {/* Blurred content */}
-      <div className="flex flex-col justify-between h-full filter blur-[4px] opacity-40">
-        <div className="flex items-start justify-between gap-1.5">
+      {/* Blurred content - financial dashboard layout */}
+      <div className="flex flex-col h-full filter blur-[4px] opacity-40">
+        {/* TOP ROW: Label (left) + % (right) */}
+        <div className="flex items-center justify-between gap-1.5 mb-2">
           <div className="flex items-center gap-1.5">
-            <CommodityEmoji emoji={emoji} className="text-[1.25rem] md:text-[1.5rem]" />
-            <span className="text-[12px] font-normal text-gray-500">{name}</span>
+            <CommodityEmoji emoji={emoji} className="text-[1rem] md:text-[1.125rem]" />
+            <span className="text-[14px] md:text-[16px] font-normal text-gray-500">{name}</span>
           </div>
-          <span className="text-[var(--text-price)] font-bold text-gray-400 leading-none">450</span>
-        </div>
-        <div className="flex justify-between items-end">
           <span className="text-[11px] text-gray-400">+1.2%</span>
+        </div>
+        {/* MIDDLE: Centered price */}
+        <div className="flex-1 flex items-center justify-center">
+          <span className="font-outfit text-[28px] md:text-[44px] font-black text-gray-400 leading-none">450</span>
         </div>
       </div>
 
@@ -212,7 +212,11 @@ function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
   );
 }
 
-// Fuel tile (full-width bottom bar) - RWF ALWAYS PRIMARY
+// ============================================================================
+// FUEL TILE - RESTRUCTURED TWO-ROW LAYOUT
+// Row 1: Icon + "Fuel" (left) | Price + RWF (center-right) | % (far right)
+// Row 2: "RWF/L" (left) | UGX conversion (center-right)
+// ============================================================================
 function FuelTile({
   price,
   change,
@@ -235,69 +239,90 @@ function FuelTile({
   return (
     <button
       onClick={onClick}
-      className="col-span-2 flex justify-between items-center rounded-lg transition-all hover:opacity-90 active:scale-[0.99]"
+      className="col-span-2 rounded-lg transition-all hover:opacity-90 active:scale-[0.99]"
       style={{
         backgroundColor: bgColor,
-        padding: "10px 14px",
+        padding: "12px 16px",
       }}
       aria-label={`Fuel: ${formatNumber(rwfPrice)} RWF per liter`}
     >
-      <div className="flex items-center gap-2">
-        <CommodityEmoji emoji="⛽" className="text-[1.25rem] md:text-[1.5rem]" />
-        <span className="text-[12px] font-medium" style={{ color: labelColor }}>
-          Fuel
-        </span>
-        <span className="text-[10px] font-normal" style={{ color: labelColor, opacity: 0.7 }}>
-          RWF/L
-        </span>
-      </div>
-      <div className="flex items-center gap-3">
-        {/* PRIMARY: Always RWF */}
-        <div className="flex items-baseline">
-          <span className="text-[var(--text-price)] font-bold leading-none" style={{ color: priceColor }}>
-            {formatNumber(rwfPrice)}
+      {/* ROW 1: Label (left) | Price (center-right) | % (far right) */}
+      <div className="flex items-center justify-between">
+        {/* Left column: Icon + Fuel label */}
+        <div className="flex items-center gap-2">
+          <CommodityEmoji emoji="⛽" className="text-[1.125rem] md:text-[1.25rem]" />
+          <span className="text-[14px] md:text-[16px] font-medium" style={{ color: labelColor }}>
+            Fuel
           </span>
-          <CurrencyTicker currency="RWF" size="sm" className="ml-1 text-gray-500" />
         </div>
 
-        {/* SECONDARY: Original currency if not RWF */}
+        {/* Right side: Price + Percentage */}
+        <div className="flex items-center gap-4">
+          {/* CENTER-RIGHT: Price - EXTRA BOLD (900) */}
+          <div className="flex items-baseline">
+            <span className="font-outfit text-[24px] md:text-[36px] font-black leading-none" style={{ color: priceColor }}>
+              {formatNumber(rwfPrice)}
+            </span>
+            <span className="text-[11px] md:text-[13px] font-semibold ml-1 text-gray-500 align-baseline">RWF</span>
+          </div>
+
+          {/* FAR RIGHT: Percentage */}
+          <ChangeIndicator change={change} />
+        </div>
+      </div>
+
+      {/* ROW 2: Unit label (left) | UGX conversion (center-right) */}
+      <div className="flex items-center justify-between mt-1">
+        {/* Left: Unit indicator */}
+        <span className="text-[11px] font-normal ml-7" style={{ color: labelColor, opacity: 0.7 }}>
+          RWF/L
+        </span>
+
+        {/* Center-right: UGX conversion if applicable */}
         {!isRWF && (
           <span
-            className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+            className="text-[11px] font-medium px-2 py-0.5 rounded-full mr-10"
             style={{ backgroundColor: "#FFFFFF", color: "#185FA5" }}
           >
             ≈ {formatNumber(price)} {currency}
           </span>
         )}
-
-        <ChangeIndicator change={change} />
       </div>
     </button>
   );
 }
 
-// Empty Fuel tile
+// Empty Fuel tile - two-row layout
 function EmptyFuelTile() {
   const labelColor = "var(--ink3, #6B7280)";
 
   return (
     <div
-      className="col-span-2 flex justify-between items-center rounded-lg opacity-55"
+      className="col-span-2 rounded-lg opacity-55"
       style={{
         backgroundColor: "var(--surface, #F0F2F5)",
-        padding: "10px 14px",
+        padding: "12px 16px",
       }}
     >
-      <div className="flex items-center gap-2">
-        <CommodityEmoji emoji="⛽" className="text-[1.25rem] md:text-[1.5rem]" />
-        <span className="text-[12px] font-medium" style={{ color: labelColor }}>
-          Fuel
-        </span>
-        <span className="text-[10px] font-normal" style={{ color: labelColor, opacity: 0.7 }}>
+      {/* ROW 1: Label (left) | em-dash (center-right) | em-dash (far right) */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CommodityEmoji emoji="⛽" className="text-[1.125rem] md:text-[1.25rem]" />
+          <span className="text-[14px] md:text-[16px] font-medium" style={{ color: labelColor }}>
+            Fuel
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="font-outfit text-[24px] md:text-[36px] font-black text-gray-400 leading-none">—</span>
+          <span className="text-[11px] text-gray-400">—</span>
+        </div>
+      </div>
+      {/* ROW 2: Unit label */}
+      <div className="flex items-center mt-1">
+        <span className="text-[11px] font-normal ml-7" style={{ color: labelColor, opacity: 0.7 }}>
           RWF/L
         </span>
       </div>
-      <span className="text-[var(--text-price)] font-bold text-gray-400 leading-none">—</span>
     </div>
   );
 }
