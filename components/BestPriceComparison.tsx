@@ -158,7 +158,7 @@ function CommodityCard({ data }: { data: ComparisonData }) {
             {cheapest.flag} {cheapest.cityName}
           </div>
           {/* PRIMARY: Always RWF */}
-          <div className="text-[18px] font-medium text-[var(--ink)] leading-none">
+          <div className="text-[var(--text-price)] font-bold text-[var(--ink)] leading-none">
             {formatNumber(cheapest.rwfPrice)}
             <CurrencyTicker currency="RWF" size="sm" className="ml-0.5 text-gray-500" />
           </div>
@@ -179,9 +179,9 @@ function CommodityCard({ data }: { data: ComparisonData }) {
             {mostExpensive.flag} {mostExpensive.cityName}
           </div>
           {/* PRIMARY: Always RWF */}
-          <div className="text-[14px] font-medium text-gray-600 leading-none">
+          <div className="text-[calc(var(--text-price)*0.85)] font-bold text-gray-600 leading-none">
             {formatNumber(mostExpensive.rwfPrice)}
-            <CurrencyTicker currency="RWF" size="xs" className="ml-0.5 text-gray-400" />
+            <CurrencyTicker currency="RWF" size="sm" className="ml-0.5 text-gray-400" />
           </div>
           {/* SECONDARY: Original currency if not RWF */}
           {expensiveIsNonRWF && (

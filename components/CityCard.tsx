@@ -118,8 +118,8 @@ function CommodityTile({
 
         {/* Right: Price hero - RWF ALWAYS PRIMARY */}
         <div className="flex flex-col items-end gap-1">
-          {/* PRIMARY: Always RWF (55px hero) */}
-          <div className="text-[55px] font-bold leading-none" style={{ color: priceColor }}>
+          {/* PRIMARY: Always RWF */}
+          <div className="text-[var(--text-price)] font-bold leading-none" style={{ color: priceColor }}>
             {formatNumber(rwfPrice)}
             <CurrencyTicker currency="RWF" size="sm" className="ml-0.5 text-gray-500" />
           </div>
@@ -163,7 +163,7 @@ function EmptyTile({ emoji, name }: { emoji: string; name: string }) {
           <span className="text-[12px] font-normal text-gray-500">{name}</span>
         </div>
         {/* Right: em-dash where price would be */}
-        <span className="text-[40px] font-bold text-gray-400 leading-none">—</span>
+        <span className="text-[var(--text-price)] font-bold text-gray-400 leading-none">—</span>
       </div>
 
       {/* BOTTOM ROW */}
@@ -192,7 +192,7 @@ function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
             <CommodityEmoji emoji={emoji} className="text-[1.25rem] md:text-[1.5rem]" />
             <span className="text-[12px] font-normal text-gray-500">{name}</span>
           </div>
-          <span className="text-[40px] font-bold text-gray-400 leading-none">450</span>
+          <span className="text-[var(--text-price)] font-bold text-gray-400 leading-none">450</span>
         </div>
         <div className="flex justify-between items-end">
           <span className="text-[11px] text-gray-400">+1.2%</span>
@@ -254,7 +254,7 @@ function FuelTile({
       <div className="flex items-center gap-3">
         {/* PRIMARY: Always RWF */}
         <div className="flex items-baseline">
-          <span className="text-[32px] font-bold leading-none" style={{ color: priceColor }}>
+          <span className="text-[var(--text-price)] font-bold leading-none" style={{ color: priceColor }}>
             {formatNumber(rwfPrice)}
           </span>
           <CurrencyTicker currency="RWF" size="sm" className="ml-1 text-gray-500" />
@@ -297,7 +297,7 @@ function EmptyFuelTile() {
           RWF/L
         </span>
       </div>
-      <span className="text-[32px] font-bold text-gray-400 leading-none">—</span>
+      <span className="text-[var(--text-price)] font-bold text-gray-400 leading-none">—</span>
     </div>
   );
 }

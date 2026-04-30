@@ -119,7 +119,7 @@ function BestPriceCard({
         {/* Price: RWF primary (large), original currency secondary (small) */}
         <div className="flex flex-col items-end gap-1">
           {/* PRIMARY: Always RWF */}
-          <div className="text-[22px] font-bold text-[var(--ink)] leading-none">
+          <div className="text-[var(--text-price)] font-bold text-[var(--ink)] leading-none">
             {formatNumber(market.rwfPrice)}
             <CurrencyTicker currency="RWF" size="sm" className="ml-1 text-gray-500" />
           </div>
