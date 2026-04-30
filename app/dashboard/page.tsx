@@ -16,7 +16,7 @@ import { CityCard } from "@/components/CityCard";
 import { BestPricesTop } from "@/components/BestPricesTop";
 import { BestPriceComparison } from "@/components/BestPriceComparison";
 import { KigaliInfoStrip } from "@/components/KigaliInfoStrip";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { DashboardSkeleton } from "@/components/Skeleton";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type {
@@ -358,6 +358,9 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Language Switcher - Native names, all visible */}
+      <LanguageSwitcher />
+
       {/* Top Bar */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Greeting pill - Marigold yellow */}
@@ -381,8 +384,6 @@ export default function DashboardPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] live-pulse" />
             </div>
           </div>
-          {/* Language Toggle */}
-          <LanguageToggle />
         </div>
 
         {/* Kigali Info Strip - Time, Weather, Forecast */}

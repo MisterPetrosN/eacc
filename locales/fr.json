@@ -83,5 +83,9 @@
   },
   "time": {
     "updated": "Mis à jour"
+  },
+  "market": {
+    "open": "Marché ouvert",
+    "closed": "Fermé"
   }
 }

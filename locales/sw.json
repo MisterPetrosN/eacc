@@ -83,5 +83,9 @@
   },
   "time": {
     "updated": "Imesasishwa"
+  },
+  "market": {
+    "open": "Soko liko wazi",
+    "closed": "Limefungwa"
   }
 }

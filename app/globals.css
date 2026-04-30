@@ -4,7 +4,7 @@
 
 :root {
   /* Price number token - consistent across all views */
-  --text-price: 26px;
+  /* Mobile: 32px, Desktop: 52px via Tailwind classes */
 
   /* EACC Design System Colors */
   --green: #1A5C36;

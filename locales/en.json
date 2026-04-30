@@ -83,5 +83,9 @@
   },
   "time": {
     "updated": "Updated"
+  },
+  "market": {
+    "open": "Market Open",
+    "closed": "Closed"
   }
 }
