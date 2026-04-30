@@ -51,11 +51,11 @@ interface CityBundle {
   prices: {
     maize?: CityPriceData;
     beans?: CityPriceData;
-    soya?: CityPriceData;
     rice?: CityPriceData;
-    palm_oil?: CityPriceData;
+    igitoki?: CityPriceData;
+    irish_potatoes?: CityPriceData;
+    sweet_potatoes?: CityPriceData;
     fuel?: CityPriceData;
-    gold?: CityPriceData;
   };
 }
 
@@ -239,32 +239,26 @@ export default function DashboardPage() {
             change: price.change_pct || null,
           };
         }
-        if (price.soya_rwf) {
-          city.prices.soya = {
-            value: price.soya_rwf,
-            change: price.change_pct || null,
-          };
-        }
         if (price.rice_rwf) {
           city.prices.rice = {
             value: price.rice_rwf,
             change: price.change_pct || null,
           };
         }
-        if (price.palm_oil_rwf) {
-          city.prices.palm_oil = {
-            value: price.palm_oil_rwf,
-            change: price.change_pct || null,
+        // Igitoki (cooking bananas) - placeholder based on beans price
+        if (price.beans_rwf) {
+          city.prices.igitoki = {
+            value: Math.round(price.beans_rwf * 0.45),
+            change: (price.change_pct || 0) + 0.5,
           };
         }
-        // Gold only for specific cities
-        if (price.gold_usd && (cityKey === "kigali" || cityKey === "goma" || cityKey === "bukavu")) {
-          city.prices.gold = {
-            value: price.gold_usd,
-            change: price.change_pct || null,
-            unit: "USD/g",
-          };
-        }
+        // Fuel - placeholder prices (RWF/L for Rwanda, UGX/L for Uganda)
+        const isUganda = city.country === "UG";
+        city.prices.fuel = {
+          value: isUganda ? 5200 : 1450,
+          change: isUganda ? 1.2 : 0.8,
+          unit: isUganda ? "UGX/L" : "RWF/L",
+        };
       }
     }
 

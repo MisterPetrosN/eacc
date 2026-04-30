@@ -25,11 +25,11 @@ interface CityData {
   prices: {
     maize?: PriceData;
     beans?: PriceData;
-    soya?: PriceData;
     rice?: PriceData;
-    palm_oil?: PriceData;
+    igitoki?: PriceData;
+    irish_potatoes?: PriceData;
+    sweet_potatoes?: PriceData;
     fuel?: PriceData;
-    gold?: PriceData;
   };
 }
 
@@ -43,13 +43,14 @@ interface CityCardProps {
 // CONSTANTS
 // ============================================================================
 
+// Grid commodities (2x3 layout)
 const commodityConfig = [
-  { key: "maize", name: "Maize", emoji: "🌽" },
-  { key: "beans", name: "Beans", emoji: "🫘" },
-  { key: "soya", name: "Soya", emoji: "🌱" },
-  { key: "rice", name: "Rice", emoji: "🍚" },
-  { key: "palm_oil", name: "Palm oil", emoji: "🌴" },
-  { key: "fuel", name: "Fuel", emoji: "⛽" },
+  { key: "maize", name: "Maize", emoji: "🌽", comingSoon: false },
+  { key: "beans", name: "Beans", emoji: "🫘", comingSoon: false },
+  { key: "rice", name: "Rice", emoji: "🍚", comingSoon: false },
+  { key: "igitoki", name: "Igitoki", emoji: "🍌", comingSoon: false },
+  { key: "irish_potatoes", name: "Irish potatoes", emoji: "🥔", comingSoon: true },
+  { key: "sweet_potatoes", name: "Sweet potatoes", emoji: "🍠", comingSoon: true },
 ];
 
 // P2P rates for UGX to RWF conversion
@@ -95,21 +96,9 @@ function CurrencyPill({ currency }: { currency: Currency }) {
   );
 }
 
-// Gold Hub badge
-function GoldHubBadge() {
-  return (
-    <span
-      className="text-[9px] font-medium tracking-[0.5px] px-1.5 py-0.5 rounded-full ml-1.5"
-      style={{ backgroundColor: "#FAEEDA", color: "#854F0B" }}
-    >
-      GOLD HUB
-    </span>
-  );
-}
-
 // ============================================================================
 // COMMODITY TILE - CORNER POSITIONING LAYOUT
-// Label top-left, Price top-right (hero), Percent bottom-left, bottom-right empty
+// Label top-left, Price top-right (hero 55px), Percent bottom-left
 // ============================================================================
 
 function CommodityTile({
@@ -140,8 +129,8 @@ function CommodityTile({
       className="text-left rounded-lg transition-all hover:opacity-90 active:scale-[0.98] flex flex-col justify-between"
       style={{
         backgroundColor: bgColor,
-        padding: "10px 12px",
-        minHeight: "78px",
+        padding: "8px 10px",
+        minHeight: "100px",
       }}
       aria-label={`${name}: ${formatNumber(price)} ${currency}${isUGX ? `, approximately ${formatNumber(toRWF(price))} RWF` : ""}`}
     >
@@ -157,8 +146,8 @@ function CommodityTile({
 
         {/* Right: Price hero (+ FX pill for UGX) */}
         <div className="flex flex-col items-end gap-1">
-          {/* Price: 22px hero, weight 700 */}
-          <div className="text-[22px] font-bold leading-none" style={{ color: priceColor }}>
+          {/* Price: 55px hero (2.5x), weight 700 */}
+          <div className="text-[55px] font-bold leading-none" style={{ color: priceColor }}>
             {formatNumber(price)}
             <span className="text-[10px] font-normal ml-0.5" style={{ color: suffixColor }}>
               {currency}
@@ -182,7 +171,6 @@ function CommodityTile({
         <span className="text-[11px] font-medium" style={{ color: changeColor }}>
           {formatChange(change)}
         </span>
-        {/* Bottom-right intentionally empty */}
       </div>
     </button>
   );
@@ -195,8 +183,8 @@ function EmptyTile({ emoji, name }: { emoji: string; name: string }) {
       className="rounded-lg flex flex-col justify-between opacity-55"
       style={{
         backgroundColor: "var(--surface, #F0F2F5)",
-        padding: "10px 12px",
-        minHeight: "78px",
+        padding: "8px 10px",
+        minHeight: "100px",
       }}
     >
       {/* TOP ROW */}
@@ -206,8 +194,8 @@ function EmptyTile({ emoji, name }: { emoji: string; name: string }) {
           <span className="text-[13px]">{emoji}</span>
           <span className="text-[12px] font-normal text-gray-500">{name}</span>
         </div>
-        {/* Right: em-dash where price would be, weight 700 to match */}
-        <span className="text-[22px] font-bold text-gray-400 leading-none">—</span>
+        {/* Right: em-dash where price would be */}
+        <span className="text-[40px] font-bold text-gray-400 leading-none">—</span>
       </div>
 
       {/* BOTTOM ROW */}
@@ -218,49 +206,131 @@ function EmptyTile({ emoji, name }: { emoji: string; name: string }) {
   );
 }
 
-// Gold tile (special, wide)
-function GoldTile({
+// Coming Soon tile - blurred with overlay
+function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
+  return (
+    <div
+      className="rounded-lg relative overflow-hidden"
+      style={{
+        backgroundColor: "var(--surface, #F0F2F5)",
+        padding: "8px 10px",
+        minHeight: "100px",
+      }}
+    >
+      {/* Blurred content */}
+      <div className="flex flex-col justify-between h-full filter blur-[4px] opacity-40">
+        <div className="flex items-start justify-between gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px]">{emoji}</span>
+            <span className="text-[12px] font-normal text-gray-500">{name}</span>
+          </div>
+          <span className="text-[40px] font-bold text-gray-400 leading-none">450</span>
+        </div>
+        <div className="flex justify-between items-end">
+          <span className="text-[11px] text-gray-400">+1.2%</span>
+        </div>
+      </div>
+
+      {/* Coming Soon overlay */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span
+          className="text-[10px] font-medium uppercase tracking-wide px-2.5 py-1 rounded"
+          style={{ backgroundColor: "var(--ink, #111827)", color: "#FFFFFF" }}
+        >
+          Coming soon
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Fuel tile (full-width bottom bar)
+function FuelTile({
   price,
   change,
+  currency,
   onClick,
 }: {
   price: number;
   change: number | null;
+  currency: Currency;
   onClick?: () => void;
 }) {
-  const hasChange = change !== null && change !== undefined;
+  const isUGX = currency === "UGX";
   const changeColor = (change ?? 0) >= 0 ? "#3B6D11" : "#A32D2D";
+  const bgColor = isUGX ? "#E6F1FB" : "#FEF9E7";
+  const priceColor = isUGX ? "#042C53" : "var(--ink, #111827)";
+  const labelColor = isUGX ? "#185FA5" : "var(--ink3, #6B7280)";
 
   return (
     <button
       onClick={onClick}
       className="col-span-2 flex justify-between items-center rounded-lg transition-all hover:opacity-90 active:scale-[0.99]"
       style={{
-        backgroundColor: "#FAEEDA",
-        padding: "8px 10px",
+        backgroundColor: bgColor,
+        padding: "10px 14px",
       }}
-      aria-label={`Gold: ${formatNumber(price)} USD per gram`}
+      aria-label={`Fuel: ${formatNumber(price)} ${currency} per liter`}
     >
-      <div className="flex items-baseline gap-1">
-        <span className="text-[11px] font-medium" style={{ color: "#854F0B" }}>
-          🥇 Gold
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-[13px]">⛽</span>
+        <span className="text-[12px] font-medium" style={{ color: labelColor }}>
+          Fuel
         </span>
-        <span className="text-[9px] font-normal" style={{ color: "#854F0B", opacity: 0.7 }}>
-          USD/g
+        <span className="text-[10px] font-normal" style={{ color: labelColor, opacity: 0.7 }}>
+          {currency}/L
         </span>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-[14px] font-bold" style={{ color: "#412402" }}>
-          {formatNumber(price)}
-          <span className="text-[10px] font-normal ml-0.5 opacity-70">USD</span>
-        </span>
-        {hasChange && (
-          <span className="text-[10px] font-medium" style={{ color: changeColor }}>
-            {formatChange(change)}
+      <div className="flex items-center gap-3">
+        <div className="flex items-baseline">
+          <span className="text-[32px] font-bold leading-none" style={{ color: priceColor }}>
+            {formatNumber(price)}
+          </span>
+          <span className="text-[10px] font-normal ml-0.5" style={{ color: labelColor }}>
+            {currency}
+          </span>
+        </div>
+        {/* UGX: RWF conversion pill */}
+        {isUGX && (
+          <span
+            className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: "#FFFFFF", color: "#3B6D11" }}
+          >
+            ≈ {formatNumber(toRWF(price))} RWF
           </span>
         )}
+        <span className="text-[11px] font-medium" style={{ color: changeColor }}>
+          {formatChange(change)}
+        </span>
       </div>
     </button>
+  );
+}
+
+// Empty Fuel tile
+function EmptyFuelTile({ currency }: { currency: Currency }) {
+  const isUGX = currency === "UGX";
+  const labelColor = isUGX ? "#185FA5" : "var(--ink3, #6B7280)";
+
+  return (
+    <div
+      className="col-span-2 flex justify-between items-center rounded-lg opacity-55"
+      style={{
+        backgroundColor: "var(--surface, #F0F2F5)",
+        padding: "10px 14px",
+      }}
+    >
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-[13px]">⛽</span>
+        <span className="text-[12px] font-medium" style={{ color: labelColor }}>
+          Fuel
+        </span>
+        <span className="text-[10px] font-normal" style={{ color: labelColor, opacity: 0.7 }}>
+          {currency}/L
+        </span>
+      </div>
+      <span className="text-[32px] font-bold text-gray-400 leading-none">—</span>
+    </div>
   );
 }
 
@@ -269,9 +339,8 @@ function GoldTile({
 // ============================================================================
 
 export function CityCard({ city, onReportPrice }: CityCardProps) {
-  const hasGold = city.prices.gold?.value !== null && city.prices.gold?.value !== undefined;
-  const isGomaStyle = city.specialBadge === "GOLD HUB";
   const cityCurrency = city.currency as Currency;
+  const hasFuel = city.prices.fuel?.value !== null && city.prices.fuel?.value !== undefined;
 
   const handlePriceClick = (commodity: string) => {
     onReportPrice?.(city.id, commodity);
@@ -281,9 +350,7 @@ export function CityCard({ city, onReportPrice }: CityCardProps) {
     <article
       className="rounded-xl bg-white"
       style={{
-        border: isGomaStyle
-          ? "1.5px solid #EF9F27"
-          : "0.5px solid rgba(0,0,0,0.08)",
+        border: "0.5px solid rgba(0,0,0,0.08)",
         padding: "14px 16px",
       }}
       aria-label={`${city.name} market prices`}
@@ -299,16 +366,26 @@ export function CityCard({ city, onReportPrice }: CityCardProps) {
             <span className="text-[14px] font-medium text-[var(--ink)] ml-1.5">
               {city.name}
             </span>
-            {isGomaStyle && <GoldHubBadge />}
           </div>
           <p className="text-[11px] text-gray-500 mt-0.5">{city.subtitle}</p>
         </div>
         <CurrencyPill currency={cityCurrency} />
       </header>
 
-      {/* Commodity tiles grid - 2 columns */}
+      {/* Commodity tiles grid - 2x3 */}
       <div className="grid grid-cols-2 gap-2">
         {commodityConfig.map((commodity) => {
+          // Coming soon tiles (Row 3: Irish potatoes, Sweet potatoes)
+          if (commodity.comingSoon) {
+            return (
+              <ComingSoonTile
+                key={commodity.key}
+                emoji={commodity.emoji}
+                name={commodity.name}
+              />
+            );
+          }
+
           const priceData = city.prices[commodity.key as keyof typeof city.prices];
           const hasPrice = priceData?.value !== null && priceData?.value !== undefined;
 
@@ -335,13 +412,16 @@ export function CityCard({ city, onReportPrice }: CityCardProps) {
           );
         })}
 
-        {/* Gold tile - spans both columns */}
-        {hasGold && (
-          <GoldTile
-            price={city.prices.gold!.value!}
-            change={city.prices.gold!.change}
-            onClick={() => handlePriceClick("gold")}
+        {/* Fuel bar - full width, always shown */}
+        {hasFuel ? (
+          <FuelTile
+            price={city.prices.fuel!.value!}
+            change={city.prices.fuel!.change}
+            currency={cityCurrency}
+            onClick={() => handlePriceClick("fuel")}
           />
+        ) : (
+          <EmptyFuelTile currency={cityCurrency} />
         )}
       </div>
     </article>

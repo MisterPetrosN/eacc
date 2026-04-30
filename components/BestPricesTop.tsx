@@ -19,11 +19,11 @@ interface CityData {
   prices: {
     maize?: PriceData;
     beans?: PriceData;
-    soya?: PriceData;
     rice?: PriceData;
-    palm_oil?: PriceData;
+    igitoki?: PriceData;
+    irish_potatoes?: PriceData;
+    sweet_potatoes?: PriceData;
     fuel?: PriceData;
-    gold?: PriceData;
   };
 }
 
@@ -45,9 +45,9 @@ interface HighestPrice {
 const commodities = [
   { key: "maize", name: "Maize", emoji: "🌽" },
   { key: "beans", name: "Beans", emoji: "🫘" },
-  { key: "soya", name: "Soya", emoji: "🌱" },
   { key: "rice", name: "Rice", emoji: "🍚" },
-  { key: "palm_oil", name: "Palm oil", emoji: "🌴" },
+  { key: "igitoki", name: "Igitoki", emoji: "🍌" },
+  { key: "fuel", name: "Fuel", emoji: "⛽" },
 ];
 
 // P2P rate for UGX to RWF conversion
