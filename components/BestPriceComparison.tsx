@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { type Currency } from "@/components/shared/Pills";
+import {
+  PRIMARY_CURRENCY,
+  P2P_RATES,
+  toRWF,
+  formatNumber,
+  CommodityEmoji,
+  CurrencyTicker,
+} from "@/components/shared/PriceDisplay";
 
 // ============================================================================
 // TYPES
@@ -37,6 +45,7 @@ interface CityPrice {
   flag: string;
   price: number;
   currency: Currency;
+  rwfPrice: number;
 }
 
 interface ComparisonData {
@@ -60,32 +69,11 @@ const commodities = [
   { key: "fuel", name: "Fuel", emoji: "⛽" },
 ];
 
-// P2P rates for conversion
-const P2P_RATES: Record<Currency, number> = {
-  RWF: 1,
-  UGX: 0.343,
-  CDF: 0.47,
-  TZS: 0.52,
-  USD: 1280,
-  ETB: 22,
-  KES: 9.5,
-};
-
 const ARB_THRESHOLD = 12; // >= 12% is "Arb opportunity"
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
-
-function toRWF(value: number, fromCurrency: Currency): number {
-  if (fromCurrency === "RWF") return value;
-  return Math.round(value * P2P_RATES[fromCurrency]);
-}
-
-function formatNumber(value: number | null): string {
-  if (value === null) return "—";
-  return new Intl.NumberFormat("en-US").format(value);
-}
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("en-US", {
@@ -107,7 +95,7 @@ function ArbBadge({ spread }: { spread: number }) {
   if (isHigh) {
     return (
       <span
-        className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+        className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
         style={{ backgroundColor: "#EAF3DE", color: "#3B6D11" }}
       >
         ↗ {spread.toFixed(1)}%
@@ -118,7 +106,7 @@ function ArbBadge({ spread }: { spread: number }) {
   // Watch/low arb: amber styling
   return (
     <span
-      className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+      className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
       style={{ backgroundColor: "#FAEEDA", color: "#854F0B" }}
     >
       {spread.toFixed(1)}%
@@ -126,18 +114,19 @@ function ArbBadge({ spread }: { spread: number }) {
   );
 }
 
-// Commodity comparison card
+// Commodity comparison card - RWF ALWAYS PRIMARY
 function CommodityCard({ data }: { data: ComparisonData }) {
   const { emoji, name, cheapest, mostExpensive, spread } = data;
   const isHighArb = spread >= ARB_THRESHOLD;
   const bgColor = isHighArb ? "#FEF9E7" : "#FFFFFF";
 
-  const destIsUGX = mostExpensive.currency === "UGX";
+  const cheapestIsNonRWF = cheapest.currency !== PRIMARY_CURRENCY;
+  const expensiveIsNonRWF = mostExpensive.currency !== PRIMARY_CURRENCY;
 
   // Source city color: always green (RWF source)
   const sourceColor = "#3B6D11";
-  // Destination city color: blue for UGX, green for RWF
-  const destColor = destIsUGX ? "#185FA5" : "#3B6D11";
+  // Destination city color: blue for non-RWF, green for RWF
+  const destColor = expensiveIsNonRWF ? "#185FA5" : "#3B6D11";
 
   return (
     <article
@@ -146,30 +135,39 @@ function CommodityCard({ data }: { data: ComparisonData }) {
         backgroundColor: bgColor,
         border: "0.5px solid rgba(0,0,0,0.08)",
         padding: "14px 16px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       }}
       aria-label={`${name}: ${spread.toFixed(1)}% arbitrage opportunity from ${cheapest.cityName} to ${mostExpensive.cityName}`}
     >
       {/* Header: commodity name + arb badge */}
       <div className="flex justify-between items-center">
-        <span className="text-[14px] font-medium text-[var(--ink)]">
-          {emoji} {name}
-        </span>
+        <div className="flex items-center gap-2">
+          <CommodityEmoji emoji={emoji} />
+          <span className="text-[14px] font-medium text-[var(--ink)]">
+            {name}
+          </span>
+        </div>
         <ArbBadge spread={spread} />
       </div>
 
-      {/* Price comparison row */}
+      {/* Price comparison row - RWF always primary */}
       <div className="flex justify-between items-end gap-2">
         {/* Source (cheap) - left aligned */}
         <div className="flex-1">
           <div className="text-[11px] font-medium mb-1" style={{ color: sourceColor }}>
             {cheapest.flag} {cheapest.cityName}
           </div>
+          {/* PRIMARY: Always RWF */}
           <div className="text-[18px] font-medium text-[var(--ink)] leading-none">
-            {formatNumber(cheapest.price)}
-            <span className="text-[10px] font-normal text-gray-400 ml-0.5">
-              {cheapest.currency}
-            </span>
+            {formatNumber(cheapest.rwfPrice)}
+            <CurrencyTicker currency="RWF" size="sm" className="ml-0.5 text-gray-500" />
           </div>
+          {/* SECONDARY: Original currency if not RWF */}
+          {cheapestIsNonRWF && (
+            <div className="text-[10px] font-medium mt-0.5" style={{ color: "#185FA5" }}>
+              ≈ {formatNumber(cheapest.price)} {cheapest.currency}
+            </div>
+          )}
         </div>
 
         {/* Arrow */}
@@ -180,16 +178,15 @@ function CommodityCard({ data }: { data: ComparisonData }) {
           <div className="text-[11px] font-medium mb-1" style={{ color: destColor }}>
             {mostExpensive.flag} {mostExpensive.cityName}
           </div>
+          {/* PRIMARY: Always RWF */}
           <div className="text-[14px] font-medium text-gray-600 leading-none">
-            {formatNumber(mostExpensive.price)}
-            <span className="text-[10px] font-normal text-gray-400 ml-0.5">
-              {mostExpensive.currency}
-            </span>
+            {formatNumber(mostExpensive.rwfPrice)}
+            <CurrencyTicker currency="RWF" size="xs" className="ml-0.5 text-gray-400" />
           </div>
-          {/* UGX: RWF conversion in amber */}
-          {destIsUGX && (
-            <div className="text-[10px] font-medium mt-0.5" style={{ color: "#BA7517" }}>
-              ≈ {formatNumber(toRWF(mostExpensive.price, mostExpensive.currency))} RWF
+          {/* SECONDARY: Original currency if not RWF */}
+          {expensiveIsNonRWF && (
+            <div className="text-[10px] font-medium mt-0.5" style={{ color: "#185FA5" }}>
+              ≈ {formatNumber(mostExpensive.price)} {mostExpensive.currency}
             </div>
           )}
         </div>
@@ -206,12 +203,13 @@ function LegendBar({ fxRate }: { fxRate: number }) {
       style={{
         backgroundColor: "var(--surface, #F0F2F5)",
         padding: "10px 14px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       }}
     >
       {/* Arb opportunity */}
       <div className="flex items-center gap-1.5">
         <span
-          className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+          className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
           style={{ backgroundColor: "#EAF3DE", color: "#3B6D11" }}
         >
           ↗ 12.0%
@@ -222,7 +220,7 @@ function LegendBar({ fxRate }: { fxRate: number }) {
       {/* Watch */}
       <div className="flex items-center gap-1.5">
         <span
-          className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+          className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
           style={{ backgroundColor: "#FAEEDA", color: "#854F0B" }}
         >
           6.0%
@@ -253,18 +251,21 @@ export function BestPriceComparison({ cities }: BestPriceComparisonProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate best prices for each commodity
+  // Calculate best prices for each commodity (compare by RWF value)
   const getBestPrices = (commodityKey: string): { cheapest: CityPrice; mostExpensive: CityPrice; spread: number } | null => {
     const citiesWithPrice: CityPrice[] = [];
 
     for (const city of cities) {
       const priceData = city.prices[commodityKey as keyof typeof city.prices];
       if (priceData?.value !== null && priceData?.value !== undefined) {
+        const currency = city.currency as Currency;
+        const rwfPrice = toRWF(priceData.value, currency);
         citiesWithPrice.push({
           cityName: city.name,
           flag: city.flag,
           price: priceData.value,
-          currency: city.currency as Currency,
+          currency,
+          rwfPrice,
         });
       }
     }
@@ -273,12 +274,12 @@ export function BestPriceComparison({ cities }: BestPriceComparisonProps) {
       return null;
     }
 
-    // Sort by price (ascending)
-    citiesWithPrice.sort((a, b) => a.price - b.price);
+    // Sort by RWF price (ascending)
+    citiesWithPrice.sort((a, b) => a.rwfPrice - b.rwfPrice);
 
     const cheapest = citiesWithPrice[0];
     const mostExpensive = citiesWithPrice[citiesWithPrice.length - 1];
-    const spread = ((mostExpensive.price - cheapest.price) / cheapest.price) * 100;
+    const spread = ((mostExpensive.rwfPrice - cheapest.rwfPrice) / cheapest.rwfPrice) * 100;
 
     return { cheapest, mostExpensive, spread };
   };
@@ -306,7 +307,7 @@ export function BestPriceComparison({ cities }: BestPriceComparisonProps) {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-[18px]">💹</span>
+          <span className="text-[1.5rem] md:text-[1.75rem]">💹</span>
           <h2 className="text-[15px] font-medium text-[var(--ink)]">
             Arb opportunities across the region
           </h2>

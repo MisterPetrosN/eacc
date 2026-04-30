@@ -1,6 +1,13 @@
 "use client";
 
 import { type Currency } from "@/components/shared/Pills";
+import {
+  PRIMARY_CURRENCY,
+  toRWF,
+  formatNumber,
+  CommodityEmoji,
+  CurrencyTicker,
+} from "@/components/shared/PriceDisplay";
 
 // ============================================================================
 // TYPES
@@ -36,6 +43,7 @@ interface HighestPrice {
   flag: string;
   price: number;
   currency: Currency;
+  rwfPrice: number;
 }
 
 // ============================================================================
@@ -50,24 +58,6 @@ const commodities = [
   { key: "fuel", name: "Fuel", emoji: "⛽" },
 ];
 
-// P2P rate for UGX to RWF conversion
-const UGX_TO_RWF = 0.343;
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-function formatNumber(value: number | null): string {
-  if (value === null) return "—";
-  return new Intl.NumberFormat("en-US").format(value);
-}
-
-function toRWF(value: number, currency: Currency): number {
-  if (currency === "RWF") return value;
-  if (currency === "UGX") return Math.round(value * UGX_TO_RWF);
-  return value;
-}
-
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
@@ -76,7 +66,7 @@ function toRWF(value: number, currency: Currency): number {
 function BestPill() {
   return (
     <span
-      className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+      className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
       style={{ backgroundColor: "#EAF3DE", color: "#3B6D11" }}
     >
       ↗ BEST
@@ -85,6 +75,7 @@ function BestPill() {
 }
 
 // Single commodity card - shows only the highest price market
+// FIXED: RWF is always primary, original currency is secondary
 function BestPriceCard({
   emoji,
   name,
@@ -94,7 +85,7 @@ function BestPriceCard({
   name: string;
   market: HighestPrice;
 }) {
-  const isUGX = market.currency === "UGX";
+  const isNonRWF = market.currency !== PRIMARY_CURRENCY;
 
   return (
     <article
@@ -105,13 +96,16 @@ function BestPriceCard({
         padding: "12px 14px",
         minHeight: "90px",
       }}
-      aria-label={`${name}: highest price at ${market.cityName}, ${formatNumber(market.price)} ${market.currency}`}
+      aria-label={`${name}: highest price at ${market.cityName}, ${formatNumber(market.rwfPrice)} RWF`}
     >
       {/* Top row: commodity name + BEST pill */}
       <div className="flex justify-between items-center mb-2">
-        <span className="text-[14px] font-medium text-[var(--ink)]">
-          {emoji} {name}
-        </span>
+        <div className="flex items-center gap-2">
+          <CommodityEmoji emoji={emoji} />
+          <span className="text-[14px] font-medium text-[var(--ink)]">
+            {name}
+          </span>
+        </div>
         <BestPill />
       </div>
 
@@ -122,21 +116,21 @@ function BestPriceCard({
           {market.flag} {market.cityName}
         </div>
 
-        {/* Price hero + FX pill */}
+        {/* Price: RWF primary (large), original currency secondary (small) */}
         <div className="flex flex-col items-end gap-1">
+          {/* PRIMARY: Always RWF */}
           <div className="text-[22px] font-bold text-[var(--ink)] leading-none">
-            {formatNumber(market.price)}
-            <span className="text-[10px] font-normal text-gray-400 ml-0.5">
-              {market.currency}
-            </span>
+            {formatNumber(market.rwfPrice)}
+            <CurrencyTicker currency="RWF" size="sm" className="ml-1 text-gray-500" />
           </div>
-          {/* UGX: White pill FX conversion */}
-          {isUGX && (
+
+          {/* SECONDARY: Original currency if not RWF */}
+          {isNonRWF && (
             <span
               className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#FFFFFF", color: "#3B6D11" }}
+              style={{ backgroundColor: "#E6F1FB", color: "#185FA5" }}
             >
-              ≈ {formatNumber(toRWF(market.price, market.currency))} RWF
+              ≈ {formatNumber(market.price)} {market.currency}
             </span>
           )}
         </div>
@@ -150,7 +144,7 @@ function BestPriceCard({
 // ============================================================================
 
 export function BestPricesTop({ cities }: BestPricesTopProps) {
-  // Find the highest price market for each commodity
+  // Find the highest price market for each commodity (by RWF value)
   const getHighestPrice = (commodityKey: string): HighestPrice | null => {
     let highest: HighestPrice | null = null;
     let highestRwfValue = 0;
@@ -168,6 +162,7 @@ export function BestPricesTop({ cities }: BestPricesTopProps) {
             flag: city.flag,
             price: priceData.value,
             currency,
+            rwfPrice: rwfValue,
           };
         }
       }
@@ -193,12 +188,12 @@ export function BestPricesTop({ cities }: BestPricesTopProps) {
       {/* Header */}
       <div className="mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-[18px]">📊</span>
+          <span className="text-[1.5rem] md:text-[1.75rem]">📊</span>
           <h2 className="text-[15px] font-medium text-[var(--ink)]">
             Best prices across the region
           </h2>
         </div>
-        <p className="text-[11px] text-gray-500 mt-0.5 ml-7">
+        <p className="text-[11px] text-gray-500 mt-0.5 ml-10 md:ml-11">
           Where each commodity is selling highest
         </p>
       </div>

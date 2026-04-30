@@ -1,6 +1,15 @@
 "use client";
 
 import { type Currency } from "@/components/shared/Pills";
+import {
+  PRIMARY_CURRENCY,
+  toRWF,
+  formatNumber,
+  CommodityEmoji,
+  CurrencyTicker,
+  CurrencyBadge,
+  ChangeIndicator,
+} from "@/components/shared/PriceDisplay";
 
 // ============================================================================
 // TYPES
@@ -53,52 +62,13 @@ const commodityConfig = [
   { key: "sweet_potatoes", name: "Sweet potatoes", emoji: "🍠", comingSoon: true },
 ];
 
-// P2P rates for UGX to RWF conversion
-const UGX_TO_RWF = 0.343;
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-function formatNumber(value: number | null): string {
-  if (value === null) return "—";
-  return new Intl.NumberFormat("en-US").format(value);
-}
-
-function formatChange(change: number | null): string {
-  if (change === null || change === undefined) return "—";
-  // Use proper minus sign (U+2212) for negative
-  const sign = change >= 0 ? "+" : "\u2212";
-  return `${sign}${Math.abs(change).toFixed(1)}%`;
-}
-
-function toRWF(ugxValue: number): number {
-  return Math.round(ugxValue * UGX_TO_RWF);
-}
-
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
 
-// Currency pill in header
-function CurrencyPill({ currency }: { currency: Currency }) {
-  const isUGX = currency === "UGX";
-  const bgColor = isUGX ? "#E6F1FB" : "#EAF3DE";
-  const textColor = isUGX ? "#185FA5" : "#3B6D11";
-
-  return (
-    <span
-      className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-      style={{ backgroundColor: bgColor, color: textColor }}
-    >
-      {currency}
-    </span>
-  );
-}
-
 // ============================================================================
 // COMMODITY TILE - CORNER POSITIONING LAYOUT
-// Label top-left, Price top-right (hero 55px), Percent bottom-left
+// RWF is ALWAYS primary (large), other currencies are secondary (small)
 // ============================================================================
 
 function CommodityTile({
@@ -116,12 +86,14 @@ function CommodityTile({
   currency: Currency;
   onClick?: () => void;
 }) {
+  const isRWF = currency === PRIMARY_CURRENCY;
+  const rwfPrice = isRWF ? price : toRWF(price, currency);
+
+  // Colors based on source currency (for background tinting)
   const isUGX = currency === "UGX";
   const bgColor = isUGX ? "#E6F1FB" : "#FEF9E7";
-  const labelColor = isUGX ? "#185FA5" : "var(--ink3, #6B7280)";
-  const priceColor = isUGX ? "#042C53" : "var(--ink, #111827)";
-  const suffixColor = isUGX ? "#185FA5" : "var(--ink4, #9CA3AF)";
-  const changeColor = (change ?? 0) >= 0 ? "#3B6D11" : "#A32D2D";
+  const labelColor = "var(--ink3, #6B7280)";
+  const priceColor = "var(--ink, #111827)";
 
   return (
     <button
@@ -132,45 +104,41 @@ function CommodityTile({
         padding: "8px 10px",
         minHeight: "100px",
       }}
-      aria-label={`${name}: ${formatNumber(price)} ${currency}${isUGX ? `, approximately ${formatNumber(toRWF(price))} RWF` : ""}`}
+      aria-label={`${name}: ${formatNumber(rwfPrice)} RWF${!isRWF ? `, approximately ${formatNumber(price)} ${currency}` : ""}`}
     >
       {/* TOP ROW: Label (left) + Price (right) */}
       <div className="flex items-start justify-between gap-1.5">
         {/* Left: emoji + name */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px]">{emoji}</span>
+          <CommodityEmoji emoji={emoji} className="text-[1.25rem] md:text-[1.5rem]" />
           <span className="text-[12px] font-normal" style={{ color: labelColor }}>
             {name}
           </span>
         </div>
 
-        {/* Right: Price hero (+ FX pill for UGX) */}
+        {/* Right: Price hero - RWF ALWAYS PRIMARY */}
         <div className="flex flex-col items-end gap-1">
-          {/* Price: 55px hero (2.5x), weight 700 */}
+          {/* PRIMARY: Always RWF (55px hero) */}
           <div className="text-[55px] font-bold leading-none" style={{ color: priceColor }}>
-            {formatNumber(price)}
-            <span className="text-[10px] font-normal ml-0.5" style={{ color: suffixColor }}>
-              {currency}
-            </span>
+            {formatNumber(rwfPrice)}
+            <CurrencyTicker currency="RWF" size="sm" className="ml-0.5 text-gray-500" />
           </div>
 
-          {/* UGX: White pill FX conversion */}
-          {isUGX && (
+          {/* SECONDARY: Original currency if not RWF */}
+          {!isRWF && (
             <span
               className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#FFFFFF", color: "#3B6D11" }}
+              style={{ backgroundColor: "#FFFFFF", color: "#185FA5" }}
             >
-              ≈ {formatNumber(toRWF(price))} RWF
+              ≈ {formatNumber(price)} {currency}
             </span>
           )}
         </div>
       </div>
 
-      {/* BOTTOM ROW: Percent change (left), empty (right) */}
+      {/* BOTTOM ROW: Percent change (left) */}
       <div className="flex justify-between items-end">
-        <span className="text-[11px] font-medium" style={{ color: changeColor }}>
-          {formatChange(change)}
-        </span>
+        <ChangeIndicator change={change} />
       </div>
     </button>
   );
@@ -191,7 +159,7 @@ function EmptyTile({ emoji, name }: { emoji: string; name: string }) {
       <div className="flex items-start justify-between gap-1.5">
         {/* Left: emoji + name */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px]">{emoji}</span>
+          <CommodityEmoji emoji={emoji} className="text-[1.25rem] md:text-[1.5rem]" />
           <span className="text-[12px] font-normal text-gray-500">{name}</span>
         </div>
         {/* Right: em-dash where price would be */}
@@ -221,7 +189,7 @@ function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
       <div className="flex flex-col justify-between h-full filter blur-[4px] opacity-40">
         <div className="flex items-start justify-between gap-1.5">
           <div className="flex items-center gap-1.5">
-            <span className="text-[13px]">{emoji}</span>
+            <CommodityEmoji emoji={emoji} className="text-[1.25rem] md:text-[1.5rem]" />
             <span className="text-[12px] font-normal text-gray-500">{name}</span>
           </div>
           <span className="text-[40px] font-bold text-gray-400 leading-none">450</span>
@@ -234,7 +202,7 @@ function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
       {/* Coming Soon overlay */}
       <div className="absolute inset-0 flex items-center justify-center">
         <span
-          className="text-[10px] font-medium uppercase tracking-wide px-2.5 py-1 rounded"
+          className="text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded"
           style={{ backgroundColor: "var(--ink, #111827)", color: "#FFFFFF" }}
         >
           Coming soon
@@ -244,7 +212,7 @@ function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
   );
 }
 
-// Fuel tile (full-width bottom bar)
+// Fuel tile (full-width bottom bar) - RWF ALWAYS PRIMARY
 function FuelTile({
   price,
   change,
@@ -256,11 +224,13 @@ function FuelTile({
   currency: Currency;
   onClick?: () => void;
 }) {
+  const isRWF = currency === PRIMARY_CURRENCY;
+  const rwfPrice = isRWF ? price : toRWF(price, currency);
+
   const isUGX = currency === "UGX";
-  const changeColor = (change ?? 0) >= 0 ? "#3B6D11" : "#A32D2D";
   const bgColor = isUGX ? "#E6F1FB" : "#FEF9E7";
-  const priceColor = isUGX ? "#042C53" : "var(--ink, #111827)";
-  const labelColor = isUGX ? "#185FA5" : "var(--ink3, #6B7280)";
+  const priceColor = "var(--ink, #111827)";
+  const labelColor = "var(--ink3, #6B7280)";
 
   return (
     <button
@@ -270,47 +240,45 @@ function FuelTile({
         backgroundColor: bgColor,
         padding: "10px 14px",
       }}
-      aria-label={`Fuel: ${formatNumber(price)} ${currency} per liter`}
+      aria-label={`Fuel: ${formatNumber(rwfPrice)} RWF per liter`}
     >
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-[13px]">⛽</span>
+      <div className="flex items-center gap-2">
+        <CommodityEmoji emoji="⛽" className="text-[1.25rem] md:text-[1.5rem]" />
         <span className="text-[12px] font-medium" style={{ color: labelColor }}>
           Fuel
         </span>
         <span className="text-[10px] font-normal" style={{ color: labelColor, opacity: 0.7 }}>
-          {currency}/L
+          RWF/L
         </span>
       </div>
       <div className="flex items-center gap-3">
+        {/* PRIMARY: Always RWF */}
         <div className="flex items-baseline">
           <span className="text-[32px] font-bold leading-none" style={{ color: priceColor }}>
-            {formatNumber(price)}
+            {formatNumber(rwfPrice)}
           </span>
-          <span className="text-[10px] font-normal ml-0.5" style={{ color: labelColor }}>
-            {currency}
-          </span>
+          <CurrencyTicker currency="RWF" size="sm" className="ml-1 text-gray-500" />
         </div>
-        {/* UGX: RWF conversion pill */}
-        {isUGX && (
+
+        {/* SECONDARY: Original currency if not RWF */}
+        {!isRWF && (
           <span
             className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: "#FFFFFF", color: "#3B6D11" }}
+            style={{ backgroundColor: "#FFFFFF", color: "#185FA5" }}
           >
-            ≈ {formatNumber(toRWF(price))} RWF
+            ≈ {formatNumber(price)} {currency}
           </span>
         )}
-        <span className="text-[11px] font-medium" style={{ color: changeColor }}>
-          {formatChange(change)}
-        </span>
+
+        <ChangeIndicator change={change} />
       </div>
     </button>
   );
 }
 
 // Empty Fuel tile
-function EmptyFuelTile({ currency }: { currency: Currency }) {
-  const isUGX = currency === "UGX";
-  const labelColor = isUGX ? "#185FA5" : "var(--ink3, #6B7280)";
+function EmptyFuelTile() {
+  const labelColor = "var(--ink3, #6B7280)";
 
   return (
     <div
@@ -320,13 +288,13 @@ function EmptyFuelTile({ currency }: { currency: Currency }) {
         padding: "10px 14px",
       }}
     >
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-[13px]">⛽</span>
+      <div className="flex items-center gap-2">
+        <CommodityEmoji emoji="⛽" className="text-[1.25rem] md:text-[1.5rem]" />
         <span className="text-[12px] font-medium" style={{ color: labelColor }}>
           Fuel
         </span>
         <span className="text-[10px] font-normal" style={{ color: labelColor, opacity: 0.7 }}>
-          {currency}/L
+          RWF/L
         </span>
       </div>
       <span className="text-[32px] font-bold text-gray-400 leading-none">—</span>
@@ -352,6 +320,7 @@ export function CityCard({ city, onReportPrice }: CityCardProps) {
       style={{
         border: "0.5px solid rgba(0,0,0,0.08)",
         padding: "14px 16px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       }}
       aria-label={`${city.name} market prices`}
     >
@@ -369,7 +338,7 @@ export function CityCard({ city, onReportPrice }: CityCardProps) {
           </div>
           <p className="text-[11px] text-gray-500 mt-0.5">{city.subtitle}</p>
         </div>
-        <CurrencyPill currency={cityCurrency} />
+        <CurrencyBadge currency={cityCurrency} />
       </header>
 
       {/* Commodity tiles grid - 2x3 */}
@@ -421,7 +390,7 @@ export function CityCard({ city, onReportPrice }: CityCardProps) {
             onClick={() => handlePriceClick("fuel")}
           />
         ) : (
-          <EmptyFuelTile currency={cityCurrency} />
+          <EmptyFuelTile />
         )}
       </div>
     </article>
