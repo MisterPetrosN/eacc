@@ -1,0 +1,87 @@
+{
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening"
+  },
+  "header": {
+    "intelligence": "EACC Intelligence",
+    "agentsLive": "Agents Live Now"
+  },
+  "bestPrices": {
+    "title": "Best prices across the region",
+    "subtitle": "Where each commodity is selling highest",
+    "best": "BEST"
+  },
+  "leanSeason": {
+    "title": "Lean Season Alerts",
+    "days": "Days"
+  },
+  "crossBorder": {
+    "title": "UG → RW Cross-Border",
+    "profitable": "Profitable route",
+    "watch": "Watch"
+  },
+  "livePrices": {
+    "title": "Live City Prices",
+    "liveCommodity": "Live {commodity} Prices",
+    "allCommodities": "All commodities",
+    "valuesIn": "Values in RWF / UGX"
+  },
+  "filters": {
+    "allCities": "All cities"
+  },
+  "commodities": {
+    "maize": "Maize",
+    "beans": "Beans",
+    "rice": "Rice",
+    "igitoki": "Igitoki",
+    "irishPotatoes": "Irish potatoes",
+    "sweetPotatoes": "Sweet potatoes",
+    "fuel": "Fuel"
+  },
+  "cities": {
+    "kigali": "Kigali",
+    "goma": "Goma",
+    "bukavu": "Bukavu",
+    "kampala": "Kampala",
+    "mbarara": "Mbarara",
+    "rusumo": "Rusumo"
+  },
+  "citySubtitles": {
+    "kigali": "Rwanda · 3 markets live",
+    "goma": "DRC · border market",
+    "bukavu": "DRC · South Kivu",
+    "kampala": "Uganda · capital market",
+    "mbarara": "Uganda · western hub",
+    "rusumo": "Rwanda · Tanzania border"
+  },
+  "status": {
+    "comingSoon": "Coming soon",
+    "gomaOnly": "Goma agents only",
+    "goldHub": "GOLD HUB"
+  },
+  "leaderboard": {
+    "title": "Top reporters this week",
+    "viewFull": "View full leaderboard"
+  },
+  "lottery": {
+    "title": "This week's draw",
+    "goldBonus": "Gold Bonus Active",
+    "nextDraw": "Next draw:",
+    "seeEntries": "See all entries"
+  },
+  "arb": {
+    "title": "Arb opportunities across the region",
+    "opportunity": "Arb opportunity",
+    "watch": "Watch"
+  },
+  "errors": {
+    "staleData": "Data may be stale. Retrying...",
+    "loadFailed": "Failed to load dashboard data",
+    "retry": "Retry"
+  },
+  "time": {
+    "updated": "Updated"
+  }
+}

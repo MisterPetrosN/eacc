@@ -1,0 +1,87 @@
+{
+  "greeting": {
+    "morning": "Mwaramutse",
+    "afternoon": "Mwiriwe",
+    "evening": "Mwiriwe"
+  },
+  "header": {
+    "intelligence": "EACC Amakuru",
+    "agentsLive": "Abakozi bari ku kazi"
+  },
+  "bestPrices": {
+    "title": "Ibiciro byiza mu karere",
+    "subtitle": "Aho buri gicuruzwa kigurishwa cyane",
+    "best": "BYIZA"
+  },
+  "leanSeason": {
+    "title": "Imenyesha ry'amapfa",
+    "days": "Iminsi"
+  },
+  "crossBorder": {
+    "title": "UG → RW Umupaka",
+    "profitable": "Inzira yunguka",
+    "watch": "Reba"
+  },
+  "livePrices": {
+    "title": "Ibiciro by'Imijyi",
+    "liveCommodity": "Ibiciro bya {commodity}",
+    "allCommodities": "Ibicuruzwa byose",
+    "valuesIn": "Agaciro muri RWF / UGX"
+  },
+  "filters": {
+    "allCities": "Imijyi yose"
+  },
+  "commodities": {
+    "maize": "Ibigori",
+    "beans": "Ibishyimbo",
+    "rice": "Umuceri",
+    "igitoki": "Igitoki",
+    "irishPotatoes": "Ibirayi",
+    "sweetPotatoes": "Ibijumba",
+    "fuel": "Peteroli"
+  },
+  "cities": {
+    "kigali": "Kigali",
+    "goma": "Goma",
+    "bukavu": "Bukavu",
+    "kampala": "Kampala",
+    "mbarara": "Mbarara",
+    "rusumo": "Rusumo"
+  },
+  "citySubtitles": {
+    "kigali": "Rwanda · Amasoko 3 akora",
+    "goma": "DRC · Isoko ry'umupaka",
+    "bukavu": "DRC · Kivu y'Amajyepfo",
+    "kampala": "Uganda · Isoko ry'umurwa mukuru",
+    "mbarara": "Uganda · Ikigo cy'iburengerazuba",
+    "rusumo": "Rwanda · Umupaka wa Tanzania"
+  },
+  "status": {
+    "comingSoon": "Biraza vuba",
+    "gomaOnly": "Abakozi ba Goma gusa",
+    "goldHub": "IKIGO CY'IZAHABU"
+  },
+  "leaderboard": {
+    "title": "Abatanga raporo bagize icya mbere",
+    "viewFull": "Reba urutonde rwose"
+  },
+  "lottery": {
+    "title": "Igitego cy'iki cyumweru",
+    "goldBonus": "Bonus y'Izahabu iri gukora",
+    "nextDraw": "Itangwa rikurikira:",
+    "seeEntries": "Reba abitabiriye bose"
+  },
+  "arb": {
+    "title": "Amahirwe y'ubucuruzi mu karere",
+    "opportunity": "Amahirwe y'ubucuruzi",
+    "watch": "Reba"
+  },
+  "errors": {
+    "staleData": "Amakuru ashobora kuba ashaje. Kwisubiramo...",
+    "loadFailed": "Kubona amakuru byanze",
+    "retry": "Ongera ugerageze"
+  },
+  "time": {
+    "updated": "Byavuguruwe"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "greeting": {
+    "morning": "Habari ya asubuhi",
+    "afternoon": "Habari ya mchana",
+    "evening": "Habari ya jioni"
+  },
+  "header": {
+    "intelligence": "EACC Habari",
+    "agentsLive": "Mawakala mtandaoni"
+  },
+  "bestPrices": {
+    "title": "Bei bora katika eneo",
+    "subtitle": "Ambapo kila bidhaa inauzwa zaidi",
+    "best": "BORA"
+  },
+  "leanSeason": {
+    "title": "Tahadhari za majira magumu",
+    "days": "Siku"
+  },
+  "crossBorder": {
+    "title": "UG → RW Mpaka",
+    "profitable": "Njia yenye faida",
+    "watch": "Angalia"
+  },
+  "livePrices": {
+    "title": "Bei za Miji Moja kwa Moja",
+    "liveCommodity": "Bei za {commodity} Moja kwa Moja",
+    "allCommodities": "Bidhaa zote",
+    "valuesIn": "Thamani katika RWF / UGX"
+  },
+  "filters": {
+    "allCities": "Miji yote"
+  },
+  "commodities": {
+    "maize": "Mahindi",
+    "beans": "Maharage",
+    "rice": "Mchele",
+    "igitoki": "Igitoki",
+    "irishPotatoes": "Viazi",
+    "sweetPotatoes": "Viazi vitamu",
+    "fuel": "Mafuta"
+  },
+  "cities": {
+    "kigali": "Kigali",
+    "goma": "Goma",
+    "bukavu": "Bukavu",
+    "kampala": "Kampala",
+    "mbarara": "Mbarara",
+    "rusumo": "Rusumo"
+  },
+  "citySubtitles": {
+    "kigali": "Rwanda · Masoko 3 yanafanya kazi",
+    "goma": "DRC · soko la mpaka",
+    "bukavu": "DRC · Kivu Kusini",
+    "kampala": "Uganda · soko la mji mkuu",
+    "mbarara": "Uganda · kituo cha magharibi",
+    "rusumo": "Rwanda · mpaka wa Tanzania"
+  },
+  "status": {
+    "comingSoon": "Inakuja hivi karibuni",
+    "gomaOnly": "Mawakala wa Goma tu",
+    "goldHub": "KITUO CHA DHAHABU"
+  },
+  "leaderboard": {
+    "title": "Waripoti bora wiki hii",
+    "viewFull": "Tazama orodha kamili"
+  },
+  "lottery": {
+    "title": "Bahati nasibu ya wiki hii",
+    "goldBonus": "Bonasi ya Dhahabu Inafanya Kazi",
+    "nextDraw": "Kura ijayo:",
+    "seeEntries": "Tazama washiriki wote"
+  },
+  "arb": {
+    "title": "Fursa za biashara katika eneo",
+    "opportunity": "Fursa ya biashara",
+    "watch": "Angalia"
+  },
+  "errors": {
+    "staleData": "Data inaweza kuwa ya zamani. Inajaribu tena...",
+    "loadFailed": "Imeshindwa kupakia data",
+    "retry": "Jaribu tena"
+  },
+  "time": {
+    "updated": "Imesasishwa"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "greeting": {
+    "morning": "Bonjour",
+    "afternoon": "Bon après-midi",
+    "evening": "Bonsoir"
+  },
+  "header": {
+    "intelligence": "EACC Renseignements",
+    "agentsLive": "Agents en ligne"
+  },
+  "bestPrices": {
+    "title": "Meilleurs prix de la région",
+    "subtitle": "Où chaque produit se vend le plus cher",
+    "best": "MEILLEUR"
+  },
+  "leanSeason": {
+    "title": "Alertes saison creuse",
+    "days": "Jours"
+  },
+  "crossBorder": {
+    "title": "UG → RW Transfrontalier",
+    "profitable": "Route rentable",
+    "watch": "Surveiller"
+  },
+  "livePrices": {
+    "title": "Prix des villes en direct",
+    "liveCommodity": "Prix {commodity} en direct",
+    "allCommodities": "Tous les produits",
+    "valuesIn": "Valeurs en RWF / UGX"
+  },
+  "filters": {
+    "allCities": "Toutes les villes"
+  },
+  "commodities": {
+    "maize": "Maïs",
+    "beans": "Haricots",
+    "rice": "Riz",
+    "igitoki": "Igitoki",
+    "irishPotatoes": "Pommes de terre",
+    "sweetPotatoes": "Patates douces",
+    "fuel": "Carburant"
+  },
+  "cities": {
+    "kigali": "Kigali",
+    "goma": "Goma",
+    "bukavu": "Bukavu",
+    "kampala": "Kampala",
+    "mbarara": "Mbarara",
+    "rusumo": "Rusumo"
+  },
+  "citySubtitles": {
+    "kigali": "Rwanda · 3 marchés actifs",
+    "goma": "RDC · marché frontalier",
+    "bukavu": "RDC · Sud-Kivu",
+    "kampala": "Ouganda · marché capital",
+    "mbarara": "Ouganda · centre ouest",
+    "rusumo": "Rwanda · frontière Tanzanie"
+  },
+  "status": {
+    "comingSoon": "Bientôt disponible",
+    "gomaOnly": "Agents Goma uniquement",
+    "goldHub": "CENTRE D'OR"
+  },
+  "leaderboard": {
+    "title": "Meilleurs reporters cette semaine",
+    "viewFull": "Voir le classement complet"
+  },
+  "lottery": {
+    "title": "Tirage de cette semaine",
+    "goldBonus": "Bonus Or Actif",
+    "nextDraw": "Prochain tirage :",
+    "seeEntries": "Voir toutes les participations"
+  },
+  "arb": {
+    "title": "Opportunités d'arbitrage dans la région",
+    "opportunity": "Opportunité d'arbitrage",
+    "watch": "Surveiller"
+  },
+  "errors": {
+    "staleData": "Les données peuvent être obsolètes. Nouvelle tentative...",
+    "loadFailed": "Échec du chargement des données",
+    "retry": "Réessayer"
+  },
+  "time": {
+    "updated": "Mis à jour"
+  }
+}

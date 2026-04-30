@@ -3,6 +3,7 @@ import { Outfit, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { BottomNav } from "@/components/BottomNav";
+import { Providers } from "@/components/Providers";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -31,16 +32,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${outfit.variable} ${spaceGrotesk.variable}`}>
       <body className="font-space-grotesk">
-        {/* Desktop Sidebar */}
-        <Sidebar />
+        <Providers>
+          {/* Desktop Sidebar */}
+          <Sidebar />
 
-        {/* Main Content */}
-        <main className="md:ml-[68px] mb-16 md:mb-0 min-h-screen bg-[#EDE4D3] p-4 md:p-5">
-          {children}
-        </main>
+          {/* Main Content */}
+          <main className="md:ml-[68px] mb-16 md:mb-0 min-h-screen bg-[#EDE4D3] p-4 md:p-5">
+            {children}
+          </main>
 
-        {/* Mobile Bottom Nav */}
-        <BottomNav />
+          {/* Mobile Bottom Nav */}
+          <BottomNav />
+        </Providers>
       </body>
     </html>
   );

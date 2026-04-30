@@ -16,7 +16,9 @@ import { CityCard } from "@/components/CityCard";
 import { BestPricesTop } from "@/components/BestPricesTop";
 import { BestPriceComparison } from "@/components/BestPriceComparison";
 import { KigaliInfoStrip } from "@/components/KigaliInfoStrip";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { DashboardSkeleton } from "@/components/Skeleton";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type {
   DashboardData,
   CommodityType,
@@ -62,6 +64,7 @@ interface CityBundle {
 type FilterType = "all" | CommodityType;
 
 export default function DashboardPage() {
+  const { t } = useLanguage();
   const [data, setData] = useState<ExtendedDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,45 +151,45 @@ export default function DashboardPage() {
     // Define city configurations
     const cityConfigs: Record<string, Partial<CityBundle>> = {
       kigali: {
-        name: "Kigali",
-        subtitle: "Rwanda · 3 markets live",
+        name: t("cities.kigali"),
+        subtitle: t("citySubtitles.kigali"),
         currency: "RWF",
         flag: "🇷🇼",
         country: "RW",
       },
       goma: {
-        name: "Goma",
-        subtitle: "DRC · border market",
+        name: t("cities.goma"),
+        subtitle: t("citySubtitles.goma"),
         currency: "RWF",
         flag: "🇨🇩",
         country: "CD",
-        specialBadge: "GOLD HUB",
+        specialBadge: t("status.goldHub"),
         accentBorder: "#EF9F27",
       },
       bukavu: {
-        name: "Bukavu",
-        subtitle: "DRC · South Kivu",
+        name: t("cities.bukavu"),
+        subtitle: t("citySubtitles.bukavu"),
         currency: "RWF",
         flag: "🇨🇩",
         country: "CD",
       },
       kampala: {
-        name: "Kampala",
-        subtitle: "Uganda · capital market",
+        name: t("cities.kampala"),
+        subtitle: t("citySubtitles.kampala"),
         currency: "UGX",
         flag: "🇺🇬",
         country: "UG",
       },
       mbarara: {
-        name: "Mbarara",
-        subtitle: "Uganda · western hub",
+        name: t("cities.mbarara"),
+        subtitle: t("citySubtitles.mbarara"),
         currency: "UGX",
         flag: "🇺🇬",
         country: "UG",
       },
       rusumo: {
-        name: "Rusumo",
-        subtitle: "Rwanda · Tanzania border",
+        name: t("cities.rusumo"),
+        subtitle: t("citySubtitles.rusumo"),
         currency: "RWF",
         flag: "🇷🇼",
         country: "XB",
@@ -274,12 +277,12 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <AlertCircle size={48} className="mx-auto mb-4 text-[var(--red)]" />
-          <p className="text-[var(--ink2)]">{error}</p>
+          <p className="text-[var(--ink2)]">{t("errors.loadFailed")}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-[var(--green)] text-white rounded-lg"
           >
-            Retry
+            {t("errors.retry")}
           </button>
         </div>
       </div>
@@ -319,7 +322,6 @@ export default function DashboardPage() {
 
   // Get spread data - find biggest spread
   const spreadValue = parseFloat(data.config.spread_usd || "0");
-  const spreadStatus = data.config.spread_status || "";
   const spreadIsPositive = spreadValue >= 0;
 
   // Get active spots for commodity-first view
@@ -334,7 +336,7 @@ export default function DashboardPage() {
 
   // Filter pills config
   const filterPills = [
-    { key: "all" as FilterType, label: "All cities", emoji: "🏙️" },
+    { key: "all" as FilterType, label: t("filters.allCities"), emoji: "🏙️" },
     ...sortedCommodities
       .filter((c) => c.status === "live")
       .map((c) => ({
@@ -351,7 +353,7 @@ export default function DashboardPage() {
         <div className="bg-[var(--amber-bg)] border border-[var(--amber)] rounded-xl p-3 flex items-center gap-2">
           <AlertCircle size={16} className="text-[var(--amber)]" />
           <span className="text-sm text-[var(--ink2)]">
-            Data may be stale. Retrying...
+            {t("errors.staleData")}
           </span>
         </div>
       )}
@@ -368,17 +370,19 @@ export default function DashboardPage() {
               />
             </svg>
           </div>
-          <div>
+          <div className="flex-1">
             <p className="font-outfit font-bold text-lg text-black">
-              {data.config.greeting || "Good morning"}
+              {t("greeting.morning")}
             </p>
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-black/70">
-                EACC Intelligence · {data.active_agents} Agents Live Now
+                {t("header.intelligence")} · {data.active_agents} {t("header.agentsLive")}
               </span>
               <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] live-pulse" />
             </div>
           </div>
+          {/* Language Toggle */}
+          <LanguageToggle />
         </div>
 
         {/* Kigali Info Strip - Time, Weather, Forecast */}
@@ -427,11 +431,11 @@ export default function DashboardPage() {
               <Volume2 size={14} className="text-black/50" />
             </button>
             <p className="text-xs uppercase tracking-widest text-black/45 mb-1">
-              Lean Season Alerts
+              {t("leanSeason.title")}
             </p>
             <p className="font-outfit font-black text-6xl text-[var(--ink)] leading-none">
               {data.config.lean_season_days || "45"}
-              <span className="text-2xl ml-1">Days</span>
+              <span className="text-2xl ml-1">{t("leanSeason.days")}</span>
             </p>
             <div className="inline-block bg-black/9 rounded-full px-3 py-1 mt-2">
               <span className="text-sm font-bold text-black/55">
@@ -448,7 +452,7 @@ export default function DashboardPage() {
           >
             <div className="flex justify-between items-start mb-1">
               <span className="text-xs uppercase tracking-wider text-[var(--ink3)]">
-                🌽 UG → RW Cross-Border
+                🌽 {t("crossBorder.title")}
               </span>
               <ChevronRight size={16} className="text-[var(--ink4)]" />
             </div>
@@ -469,7 +473,7 @@ export default function DashboardPage() {
                   spreadIsPositive ? "text-[var(--green-light)]" : "text-[var(--orange)]"
                 }`}
               >
-                {spreadStatus}
+                {spreadIsPositive ? t("crossBorder.profitable") : t("crossBorder.watch")}
               </span>
             </div>
           </Link>
@@ -483,10 +487,12 @@ export default function DashboardPage() {
             <Grid3X3 size={20} className="text-[var(--green)]" />
             <h2 className="font-outfit font-bold text-lg text-[var(--ink)]">
               {isCityFirstView ? (
-                "Live City Prices"
+                t("livePrices.title")
               ) : (
                 <>
-                  Live {(activeFilter as string).charAt(0).toUpperCase() + (activeFilter as string).slice(1).replace("_", " ")}{" "}
+                  {t("livePrices.liveCommodity", {
+                    commodity: (activeFilter as string).charAt(0).toUpperCase() + (activeFilter as string).slice(1).replace("_", " "),
+                  })}{" "}
                   {
                     {
                       maize: "🌽",
@@ -496,14 +502,13 @@ export default function DashboardPage() {
                       palm_oil: "🌴",
                       gold: "🪙",
                     }[activeFilter as CommodityType]
-                  }{" "}
-                  Prices
+                  }
                 </>
               )}
             </h2>
           </div>
           <span className="text-sm uppercase text-[var(--ink4)]">
-            {isCityFirstView ? "All commodities" : "Values in RWF / UGX"}
+            {isCityFirstView ? t("livePrices.allCommodities") : t("livePrices.valuesIn")}
           </span>
         </div>
 
@@ -608,7 +613,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mb-4">
             <Trophy size={20} className="text-[var(--green)]" />
             <span className="font-outfit font-bold text-base text-[var(--ink)]">
-              Top reporters this week
+              {t("leaderboard.title")}
             </span>
           </div>
           <div className="space-y-3">
@@ -648,7 +653,7 @@ export default function DashboardPage() {
             href="/leaderboard"
             className="block mt-4 text-sm text-[var(--green)] font-medium hover:underline"
           >
-            View full leaderboard →
+            {t("leaderboard.viewFull")} →
           </Link>
         </div>
 
@@ -657,7 +662,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mb-4">
             <Ticket size={20} className="text-[var(--amber)]" />
             <span className="font-outfit font-bold text-base text-[var(--ink)]">
-              This week&apos;s draw
+              {t("lottery.title")}
             </span>
           </div>
           <div className="flex items-baseline gap-1">
@@ -666,18 +671,18 @@ export default function DashboardPage() {
             </span>
             {data.gold_active_this_week && (
               <span className="bg-[var(--amber)] px-2.5 py-1 rounded text-xs uppercase font-bold text-[var(--ink)] ml-2">
-                Gold Bonus Active
+                {t("lottery.goldBonus")}
               </span>
             )}
           </div>
           <p className="text-sm text-[var(--ink3)] mt-3">
-            Next draw: <span className="font-bold text-[var(--ink)]">{countdown}</span>
+            {t("lottery.nextDraw")} <span className="font-bold text-[var(--ink)]">{countdown}</span>
           </p>
           <Link
             href="/lottery"
             className="inline-block mt-4 px-5 py-2.5 bg-[var(--surface)] rounded-lg text-sm font-medium text-[var(--ink2)] hover:bg-[var(--border)] transition-colors"
           >
-            See all entries →
+            {t("lottery.seeEntries")} →
           </Link>
         </div>
       </div>
