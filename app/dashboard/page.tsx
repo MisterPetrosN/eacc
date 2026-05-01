@@ -23,7 +23,7 @@ import type {
   DashboardData,
   CommodityType,
   CommodityRow,
-  SpotWithPrice,
+  SpotWithPrices,
   AgentRow,
   SpreadRow,
 } from "@/lib/types";
@@ -37,6 +37,7 @@ interface ExtendedDashboardData extends DashboardData {
 interface CityPriceData {
   value: number | null;
   change: number | null;
+  currency: string;
   unit?: string;
   reportedAt?: string;
 }
@@ -50,15 +51,7 @@ interface CityBundle {
   currency: string;
   specialBadge?: string | null;
   accentBorder?: string;
-  prices: {
-    maize?: CityPriceData;
-    beans?: CityPriceData;
-    rice?: CityPriceData;
-    igitoki?: CityPriceData;
-    irish_potatoes?: CityPriceData;
-    sweet_potatoes?: CityPriceData;
-    fuel?: CityPriceData;
-  };
+  prices: Record<string, CityPriceData | undefined>;
 }
 
 type FilterType = "all" | CommodityType;
@@ -141,7 +134,7 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Transform spots data into city bundles
+  // Transform spots data into city bundles using long format prices
   const transformToCityBundles = (): CityBundle[] => {
     if (!data) return [];
 
@@ -225,44 +218,23 @@ export default function DashboardPage() {
       }
 
       const city = cityMap.get(cityKey)!;
-      const price = spot.price;
 
-      if (price) {
-        // Update prices, taking the most recent or averaging
-        if (price.maize_rwf) {
-          city.prices.maize = {
-            value: price.maize_rwf,
-            change: price.change_pct || null,
-            reportedAt: price.updated_at ?? undefined,
+      // Process each price in the spot's prices array (long format)
+      for (const priceData of spot.prices) {
+        const commodityId = priceData.commodity_id;
+
+        // Only update if we don't have a price yet or this one is newer
+        const existing = city.prices[commodityId];
+        if (!existing || (priceData.updated_at && (!existing.reportedAt || priceData.updated_at > existing.reportedAt))) {
+          city.prices[commodityId] = {
+            value: priceData.price,
+            change: priceData.change_pct,
+            currency: priceData.currency,
+            reportedAt: priceData.updated_at ?? undefined,
           };
         }
-        if (price.beans_rwf) {
-          city.prices.beans = {
-            value: price.beans_rwf,
-            change: price.change_pct || null,
-          };
-        }
-        if (price.rice_rwf) {
-          city.prices.rice = {
-            value: price.rice_rwf,
-            change: price.change_pct || null,
-          };
-        }
-        // Igitoki (cooking bananas) - placeholder based on beans price
-        if (price.beans_rwf) {
-          city.prices.igitoki = {
-            value: Math.round(price.beans_rwf * 0.45),
-            change: (price.change_pct || 0) + 0.5,
-          };
-        }
-        // Fuel - placeholder prices (RWF/L for Rwanda, UGX/L for Uganda)
-        const isUganda = city.country === "UG";
-        city.prices.fuel = {
-          value: isUganda ? 5200 : 1450,
-          change: isUganda ? 1.2 : 0.8,
-          unit: isUganda ? "UGX/L" : "RWF/L",
-        };
       }
+
     }
 
     return Array.from(cityMap.values());
@@ -295,23 +267,14 @@ export default function DashboardPage() {
   const sortedCommodities = [...data.commodities].sort(
     (a, b) => a.tab_order - b.tab_order
   );
+  const liveCommodities = sortedCommodities.filter((c) => c.status === "live");
 
   const isCityFirstView = activeFilter === "all";
 
+  // Get average price dynamically from kigali_averages
   const getAvgPrice = (): number => {
-    if (activeFilter === "all") return data.kigali_avg_maize;
-    switch (activeFilter) {
-      case "maize":
-        return data.kigali_avg_maize;
-      case "beans":
-        return data.kigali_avg_beans;
-      case "soya":
-        return data.kigali_avg_soya || 0;
-      case "rice":
-        return data.kigali_avg_rice || 0;
-      default:
-        return data.kigali_avg_maize;
-    }
+    const commodityId = activeFilter === "all" ? "maize" : activeFilter;
+    return data.kigali_averages[commodityId] || 0;
   };
 
   const getChangePct = (): number => {
@@ -328,23 +291,32 @@ export default function DashboardPage() {
   const activeSpots = data.spots.filter((s) => s.active);
   const displaySpots = activeSpots.slice(0, 8);
 
+  // Check if gold is active (any spot has gold price)
+  const goldActive = data.spots.some((s) =>
+    s.prices.some((p) => p.commodity_id === "gold" && p.price !== null && p.price > 0)
+  );
+
   // Top agents for mini leaderboard
   const topAgents = [...data.agents]
     .filter((a) => a.active)
     .sort((a, b) => b.tickets_month - a.tickets_month)
     .slice(0, 3);
 
-  // Filter pills config
+  // Filter pills config - dynamically from commodities
   const filterPills = [
     { key: "all" as FilterType, label: t("filters.allCities"), emoji: "🏙️" },
-    ...sortedCommodities
-      .filter((c) => c.status === "live")
-      .map((c) => ({
-        key: c.id as FilterType,
-        label: c.name,
-        emoji: c.icon,
-      })),
+    ...liveCommodities.map((c) => ({
+      key: c.id as FilterType,
+      label: c.name,
+      emoji: c.icon,
+    })),
   ];
+
+  // Get commodity icon dynamically
+  const getCommodityIcon = (commodityId: string): string => {
+    const commodity = data.commodities.find((c) => c.id === commodityId);
+    return commodity?.icon || "📦";
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
@@ -494,16 +466,7 @@ export default function DashboardPage() {
                   {t("livePrices.liveCommodity", {
                     commodity: (activeFilter as string).charAt(0).toUpperCase() + (activeFilter as string).slice(1).replace("_", " "),
                   })}{" "}
-                  {
-                    {
-                      maize: "🌽",
-                      beans: "🫘",
-                      soya: "🫛",
-                      rice: "🍚",
-                      palm_oil: "🌴",
-                      gold: "🪙",
-                    }[activeFilter as CommodityType]
-                  }
+                  {getCommodityIcon(activeFilter)}
                 </>
               )}
             </h2>
@@ -521,6 +484,7 @@ export default function DashboardPage() {
               <CityCard
                 key={city.id}
                 city={city}
+                commodities={liveCommodities}
                 onReportPrice={(cityId, commodity) => {
                   // TODO: Open price report modal
                   console.log(`Report price for ${commodity} in ${cityId}`);
@@ -534,7 +498,7 @@ export default function DashboardPage() {
         ) : (
           // Commodity-first view: original SpotCard grid
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {displaySpots.map((spot: SpotWithPrice) => (
+            {displaySpots.map((spot: SpotWithPrices) => (
               <SpotCard
                 key={spot.id}
                 spot={spot}
@@ -668,9 +632,9 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="font-outfit font-black text-[42px] text-[var(--green)] price-display">
-              ${parseInt(data.config.weekly_jackpot_usd || "15") + (data.gold_active_this_week ? 10 : 0)}
+              ${parseInt(data.config.weekly_jackpot_usd || "15") + (goldActive ? 10 : 0)}
             </span>
-            {data.gold_active_this_week && (
+            {goldActive && (
               <span className="bg-[var(--amber)] px-2.5 py-1 rounded text-xs uppercase font-bold text-[var(--ink)] ml-2">
                 {t("lottery.goldBonus")}
               </span>

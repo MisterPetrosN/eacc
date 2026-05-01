@@ -1,6 +1,6 @@
 "use client";
 
-type Currency = "RWF" | "UGX" | "CDF" | "TZS" | "USD" | "ETB" | "KES";
+import type { Currency } from "@/lib/types";
 
 // Currency color mapping - matches CSS variables
 const CHIP_COLORS: Record<Currency, string> = {
@@ -167,4 +167,4 @@ export function ConvertedPrice({ value, currency, className = "" }: ConvertedPri
 
 // Export utilities
 export { CHIP_COLORS, CURRENCY_FLAGS, P2P_RATES };
-export type { Currency };
+export type { Currency } from "@/lib/types";

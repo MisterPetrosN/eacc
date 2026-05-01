@@ -120,7 +120,7 @@ export function ModifierPill({
 // ============================================================================
 
 export { CurrencyChip, DualCurrency, ConvertedPrice, toRWF } from "./CurrencyChip";
-export type { Currency } from "./CurrencyChip";
+export type { Currency } from "@/lib/types";
 
 // ============================================================================
 // 5. STATUS PILL (semantic meaning) - BUMPED padding

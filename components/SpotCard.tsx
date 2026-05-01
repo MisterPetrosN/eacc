@@ -1,61 +1,45 @@
 "use client";
 
 import { MapPin, Volume2, VolumeX, TrendingUp, TrendingDown } from "lucide-react";
-import type { SpotWithPrice, CommodityType } from "@/lib/types";
+import type { SpotWithPrices, CommodityType, Price } from "@/lib/types";
 import { useSpeech } from "@/hooks/useSpeech";
 
 interface SpotCardProps {
-  spot: SpotWithPrice;
+  spot: SpotWithPrices;
   commodity: CommodityType;
 }
 
 export function SpotCard({ spot, commodity }: SpotCardProps) {
   const { speakPrice, isSpeaking, stop } = useSpeech();
 
-  const price = spot.price;
   const isPriority = spot.priority;
 
-  // Get the price for current commodity
-  const getPriceValue = (): number | null => {
-    if (!price) return null;
-    switch (commodity) {
-      case "maize":
-        return price.maize_rwf;
-      case "beans":
-        return price.beans_rwf;
-      case "soya":
-        return price.soya_rwf;
-      case "rice":
-        return price.rice_rwf;
-      case "palm_oil":
-        return price.palm_oil_rwf;
-      case "gold":
-        return price.gold_usd;
-      default:
-        return price.maize_rwf;
-    }
-  };
+  // Find the price for current commodity from the prices array (long format)
+  const priceData: Price | undefined = spot.prices.find(
+    (p) => p.commodity_id === commodity
+  );
 
-  const priceValue = getPriceValue();
-  const changePct = price?.change_pct || 0;
+  const priceValue = priceData?.price ?? null;
+  const changePct = priceData?.change_pct || 0;
   const isPositive = changePct >= 0;
 
-  // Format price based on country
+  // Format price based on currency
   const formatPrice = (): string => {
-    if (!priceValue) return "—";
-    if (spot.country === "UG") {
-      return `UGX ${Math.round(priceValue).toLocaleString()}`;
+    if (priceValue === null) return "—";
+    const currency = priceData?.currency || "RWF";
+    if (currency === "USD") {
+      return `$${priceValue.toFixed(2)}`;
     }
-    if (commodity === "gold" && price?.gold_usd) {
-      return `$${price.gold_usd.toFixed(2)}`;
+    if (currency === "UGX") {
+      return `UGX ${Math.round(priceValue).toLocaleString()}`;
     }
     return `RWF ${Math.round(priceValue).toLocaleString()}`;
   };
 
   // Format time ago
   const formatTimeAgo = (): string => {
-    if (!price?.updated_at) return "";
-    const updatedDate = new Date(price.updated_at);
+    if (!priceData?.updated_at) return "";
+    const updatedDate = new Date(priceData.updated_at);
     const now = new Date();
     const diffMs = now.getTime() - updatedDate.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -67,9 +51,7 @@ export function SpotCard({ spot, commodity }: SpotCardProps) {
   };
 
   const getCurrency = () => {
-    if (commodity === "gold") return "USD";
-    if (spot.country === "UG") return "UGX";
-    return "RWF";
+    return priceData?.currency || "RWF";
   };
 
   const handleSpeak = () => {
@@ -135,8 +117,10 @@ export function SpotCard({ spot, commodity }: SpotCardProps) {
           )}
         </button>
         <div className="text-right">
-          {price?.status === "pending" || !price?.updated_at ? (
-            <span className="text-xs font-bold text-[var(--amber)]">Pending</span>
+          {priceData?.status === "pending" || !priceData?.updated_at ? (
+            <span className="text-xs font-bold text-[var(--amber)]">
+              {priceData ? "Pending" : "No data"}
+            </span>
           ) : (
             <>
               <div

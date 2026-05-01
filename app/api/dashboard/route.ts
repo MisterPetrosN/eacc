@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   getSpots,
-  getPrices,
+  getLatestPrices,
   getConfig,
   getCommodities,
   getAgents,
@@ -9,15 +9,15 @@ import {
   getSpreads,
   getExchangeRates,
 } from '@/lib/eacc-data';
-import type { SpotWithPrice, DashboardData } from '@/lib/types';
+import type { SpotWithPrices, DashboardData, Price } from '@/lib/types';
 
 export async function GET() {
   try {
     // Fetch all data in parallel
-    const [spots, prices, config, commodities, agents, lottery, spreads, exchangeRates] =
+    const [spots, priceMap, config, commodities, agents, lottery, spreads, exchangeRates] =
       await Promise.all([
         getSpots(),
-        getPrices(),
+        getLatestPrices(),
         getConfig(),
         getCommodities(),
         getAgents(),
@@ -26,74 +26,58 @@ export async function GET() {
         getExchangeRates(),
       ]);
 
-    // Join prices onto spots
-    const spotsWithPrices: SpotWithPrice[] = spots.map((spot) => {
-      const price = prices.find((p) => p.spot_id === spot.id);
-      return {
-        ...spot,
-        price,
-      };
-    });
+    // Convert priceMap to array grouped by spot_id
+    const pricesBySpot = new Map<string, Price[]>();
+    for (const [, price] of Array.from(priceMap.entries())) {
+      const spotPrices = pricesBySpot.get(price.spot_id) || [];
+      spotPrices.push(price);
+      pricesBySpot.set(price.spot_id, spotPrices);
+    }
 
-    // Compute Kigali averages (RW spots with prices)
+    // Join prices onto spots (long format: each spot has prices: Price[])
+    const spotsWithPrices: SpotWithPrices[] = spots.map((spot) => ({
+      ...spot,
+      prices: pricesBySpot.get(spot.id) || [],
+    }));
+
+    // Get live commodity IDs for computing averages
+    const liveCommodityIds = commodities
+      .filter((c) => c.status === 'live')
+      .map((c) => c.id);
+
+    // Compute Kigali averages dynamically per commodity
     const rwSpotsWithPrices = spotsWithPrices.filter(
-      (s) => s.country === 'RW' && s.price
+      (s) => s.country === 'RW' && s.prices.length > 0
     );
 
-    const kigali_avg_maize =
-      rwSpotsWithPrices.length > 0
-        ? Math.round(
-            rwSpotsWithPrices.reduce((sum, s) => sum + (s.price?.maize_rwf || 0), 0) /
-              rwSpotsWithPrices.filter((s) => s.price?.maize_rwf).length || 1
-          )
-        : 0;
+    const kigali_averages: Record<string, number> = {};
+    for (const commodityId of liveCommodityIds) {
+      const pricesForCommodity = rwSpotsWithPrices
+        .flatMap((s) => s.prices)
+        .filter((p) => p.commodity_id === commodityId && p.price !== null);
 
-    const kigali_avg_beans =
-      rwSpotsWithPrices.length > 0
-        ? Math.round(
-            rwSpotsWithPrices.reduce((sum, s) => sum + (s.price?.beans_rwf || 0), 0) /
-              rwSpotsWithPrices.filter((s) => s.price?.beans_rwf).length || 1
-          )
-        : 0;
-
-    const kigali_avg_soya =
-      rwSpotsWithPrices.length > 0
-        ? Math.round(
-            rwSpotsWithPrices.reduce((sum, s) => sum + (s.price?.soya_rwf || 0), 0) /
-              rwSpotsWithPrices.filter((s) => s.price?.soya_rwf).length || 1
-          )
-        : 0;
-
-    const kigali_avg_rice =
-      rwSpotsWithPrices.length > 0
-        ? Math.round(
-            rwSpotsWithPrices.reduce((sum, s) => sum + (s.price?.rice_rwf || 0), 0) /
-              rwSpotsWithPrices.filter((s) => s.price?.rice_rwf).length || 1
-          )
-        : 0;
+      if (pricesForCommodity.length > 0) {
+        const sum = pricesForCommodity.reduce((acc, p) => acc + (p.price || 0), 0);
+        kigali_averages[commodityId] = Math.round(sum / pricesForCommodity.length);
+      }
+    }
 
     // Count active agents
     const active_agents = agents.filter((a) => a.active).length;
 
-    // Check if gold is active this week
-    const gold_active_this_week = spotsWithPrices.some(
-      (s) => s.price?.gold_usd && s.price.gold_usd > 0
-    );
+    // Sort commodities by tab_order
+    const sortedCommodities = [...commodities].sort((a, b) => a.tab_order - b.tab_order);
 
     const data: DashboardData & { spreads: typeof spreads; exchangeRates: typeof exchangeRates } = {
       spots: spotsWithPrices,
       config,
-      commodities,
+      commodities: sortedCommodities,
       agents,
       lottery,
       spreads,
       exchangeRates,
-      kigali_avg_maize,
-      kigali_avg_beans,
-      kigali_avg_soya,
-      kigali_avg_rice,
+      kigali_averages,
       active_agents,
-      gold_active_this_week,
     };
 
     return NextResponse.json(data, {

@@ -1,5 +1,12 @@
 // Type definitions for EACC Google Sheets data
 
+// Commodity type for price access
+// Using string to support dynamic commodities from the commodities sheet
+export type CommodityType = string;
+
+// Currency type
+export type Currency = 'RWF' | 'UGX' | 'CDF' | 'TZS' | 'USD' | 'ETB' | 'KES';
+
 export interface SpotRow {
   id: string;
   name: string;
@@ -13,19 +20,24 @@ export interface SpotRow {
   notes: string;
 }
 
-export interface PriceRow {
+
+// New long format - one row per spot+commodity
+export interface Price {
   spot_id: string;
-  maize_rwf: number | null;
-  beans_rwf: number | null;
-  soya_rwf: number | null;
-  rice_rwf: number | null;
-  palm_oil_rwf: number | null;
-  gold_usd: number | null;
+  commodity_id: CommodityType;
+  price: number | null;
+  currency: Currency;
+  change_pct: number | null;
   updated_at: string | null;
   reported_by: string;
-  change_pct: number;
   status: 'live' | 'pending' | 'stale';
 }
+
+// Helper type for price lookup key
+export type PriceKey = `${string}:${CommodityType}`;
+
+// Map of latest prices by spot_id:commodity_id
+export type PriceMap = Map<PriceKey, Price>;
 
 export interface ConfigRow {
   key: string;
@@ -78,36 +90,31 @@ export interface SpreadRow {
   notes: string;
 }
 
-// Joined data types
-export interface SpotWithPrice extends SpotRow {
-  price?: PriceRow;
+// Joined data types - spot with all its prices (long format)
+export interface SpotWithPrices extends SpotRow {
+  prices: Price[];
 }
 
 // Dashboard API response
 export interface DashboardData {
-  spots: SpotWithPrice[];
+  spots: SpotWithPrices[];
   config: Record<string, string>;
   commodities: CommodityRow[];
   agents: AgentRow[];
   lottery: LotteryRow[];
-  kigali_avg_maize: number;
-  kigali_avg_beans: number;
-  kigali_avg_soya: number;
-  kigali_avg_rice: number;
+  // Dynamic averages keyed by commodity_id (e.g., { maize: 320, beans: 450 })
+  kigali_averages: Record<string, number>;
   active_agents: number;
-  gold_active_this_week: boolean;
 }
 
 // Agent API response
 export interface AgentData {
   agent: AgentRow;
   spot: SpotRow;
-  recentReports: PriceRow[];
+  recentReports: Price[];
   ticketHistory: { week: string; tickets: number; prize?: number }[];
   leaderboardPosition: number;
   totalAgents: number;
   weeklyActivity: number[];
 }
 
-// Commodity type for price access
-export type CommodityType = 'maize' | 'beans' | 'soya' | 'rice' | 'palm_oil' | 'gold';

@@ -7,6 +7,23 @@ Next.js 14, TypeScript, Tailwind, googleapis
 - Tabs: spots, prices, config, commodities, agents, lottery, spreads
 - Exchange rates: P2P scraper (Globex/Binance) > admin override > cached
 
+### Prices Sheet Schema (Long Format)
+| Column | Type | Description |
+|--------|------|-------------|
+| spot_id | string | Market ID (e.g., `kimironko`, `goma`) |
+| commodity_id | string | `maize`, `beans`, `soya`, `rice`, `palm_oil`, `gold` |
+| price | number | Price value in source currency |
+| currency | string | `RWF`, `UGX`, `CDF`, `TZS`, `USD`, `ETB`, `KES` |
+| change_pct | number | Percent change from previous period |
+| updated_at | string | ISO timestamp |
+| reported_by | string | Agent name |
+| status | string | `live`, `pending`, `stale` |
+
+**Data Functions (lib/eacc-data.ts):**
+- `getPricesLong()` → `Price[]` — Raw long format
+- `getLatestPrices()` → `PriceMap` — Map keyed by `spot_id:commodity_id`
+- `getPricesWide()` → `PriceRow[]` — Converts to legacy wide format
+
 ## API Routes
 - `/api/dashboard` - All dashboard data, revalidate 60s
 - `/api/agent/[id]` - Personal agent stats

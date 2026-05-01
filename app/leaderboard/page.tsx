@@ -9,11 +9,11 @@ import {
   Share2,
 } from "lucide-react";
 import { LeaderboardSkeleton } from "@/components/Skeleton";
-import type { AgentRow, SpotWithPrice } from "@/lib/types";
+import type { AgentRow, SpotWithPrices } from "@/lib/types";
 
 interface DashboardData {
   agents: AgentRow[];
-  spots: SpotWithPrice[];
+  spots: SpotWithPrices[];
   config: Record<string, string>;
 }
 

@@ -322,6 +322,16 @@ function MyStatsContent() {
                 month: "short",
               });
 
+              // Commodity emoji map
+              const commodityEmoji: Record<string, string> = {
+                maize: "🌽",
+                beans: "🫘",
+                soya: "🫛",
+                rice: "🍚",
+                palm_oil: "🌴",
+                gold: "🪙",
+              };
+
               // Simulated accuracy check
               const deviation = Math.random() * 25;
               const isAccurate = deviation <= 8;
@@ -334,15 +344,13 @@ function MyStatsContent() {
                 >
                   <span className="text-xs text-[var(--ink3)] w-16">{dateStr}</span>
                   <span className="text-sm">
-                    {report.maize_rwf ? "🌽" : ""}
-                    {report.beans_rwf ? "🫘" : ""}
-                    {report.soya_rwf ? "🫛" : ""}
+                    {commodityEmoji[report.commodity_id] || "📦"}
                   </span>
                   <span className="flex-1 text-xs text-[var(--ink2)]">
-                    {report.maize_rwf ? `RWF ${report.maize_rwf}` : "—"}
+                    {report.price ? `${report.currency} ${report.price.toLocaleString()}` : "—"}
                   </span>
                   <span className="text-xs text-[var(--ink4)]">
-                    vs {report.maize_rwf ? Math.round(report.maize_rwf * 1.02) : "—"}
+                    vs {report.price ? Math.round(report.price * 1.02).toLocaleString() : "—"}
                   </span>
                   <span className="w-5 h-5 rounded-full flex items-center justify-center">
                     {isAccurate ? (

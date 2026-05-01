@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAgents, getPrices, getSpots, getConfig } from '@/lib/eacc-data';
+import { getAgents, getPricesLong, getSpots, getConfig } from '@/lib/eacc-data';
 import type { AgentData } from '@/lib/types';
 
 export async function GET(
@@ -14,7 +14,7 @@ export async function GET(
 
     const [agents, prices, spots, config] = await Promise.all([
       getAgents(),
-      getPrices(),
+      getPricesLong(),
       getSpots(),
       getConfig(),
     ]);
@@ -42,7 +42,7 @@ export async function GET(
       );
     }
 
-    // Get recent reports for this spot
+    // Get recent reports for this spot (now using long format Price[])
     const spotPrices = prices.filter((p) => p.spot_id === agent.spot_id);
 
     // Calculate ticket history (simulated for last 4 weeks)

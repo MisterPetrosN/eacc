@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { Ticket, Sparkles, Check, Clock, Award } from "lucide-react";
 import { LotterySkeleton } from "@/components/Skeleton";
-import type { AgentRow, LotteryRow, SpotWithPrice } from "@/lib/types";
+import type { AgentRow, LotteryRow, SpotWithPrices } from "@/lib/types";
 
 interface DashboardData {
   agents: AgentRow[];
-  spots: SpotWithPrice[];
+  spots: SpotWithPrices[];
   lottery: LotteryRow[];
   config: Record<string, string>;
   gold_active_this_week: boolean;
@@ -88,8 +88,12 @@ export default function LotteryPage() {
 
   // Gold reporter (if active)
   const goldReporter = data.gold_active_this_week
-    ? data.spots.find((s) => s.price?.gold_usd && s.price.gold_usd > 0)
+    ? data.spots.find((s) => {
+        const goldPrice = s.prices.find((p) => p.commodity_id === "gold");
+        return goldPrice?.price && goldPrice.price > 0;
+      })
     : null;
+  const goldPrice = goldReporter?.prices.find((p) => p.commodity_id === "gold");
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
@@ -217,7 +221,7 @@ export default function LotteryPage() {
             </span>
           </div>
           <p className="text-sm text-[var(--ink2)]">
-            {goldReporter.name} reported gold at ${goldReporter.price?.gold_usd?.toLocaleString()}/oz
+            {goldReporter.name} reported gold at ${goldPrice?.price?.toLocaleString()}/oz
           </p>
           <p className="text-xs text-[var(--ink4)] mt-1">
             Prize pool boosted by +$10

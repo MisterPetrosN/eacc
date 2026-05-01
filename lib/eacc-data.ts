@@ -1,7 +1,11 @@
 import { getSheetTab, getExchangeRates } from './sheets';
 import type {
   SpotRow,
-  PriceRow,
+  Price,
+  PriceKey,
+  PriceMap,
+  CommodityType,
+  Currency,
   CommodityRow,
   AgentRow,
   LotteryRow,
@@ -42,21 +46,72 @@ export async function getSpots(): Promise<SpotRow[]> {
   }));
 }
 
-export async function getPrices(): Promise<PriceRow[]> {
-  const rows = await getSheetTab('prices');
-  return rows.map((row) => ({
-    spot_id: row.spot_id || '',
-    maize_rwf: parseNumOrNull(row.maize_rwf),
-    beans_rwf: parseNumOrNull(row.beans_rwf),
-    soya_rwf: parseNumOrNull(row.soya_rwf),
-    rice_rwf: parseNumOrNull(row.rice_rwf),
-    palm_oil_rwf: parseNumOrNull(row.palm_oil_rwf),
-    gold_usd: parseNumOrNull(row.gold_usd),
-    updated_at: row.updated_at || null,
-    reported_by: row.reported_by || '',
-    change_pct: parseNum(row.change_pct),
-    status: (row.status as 'live' | 'pending' | 'stale') || 'pending',
-  }));
+// Valid currencies (static - these don't change often)
+const VALID_CURRENCIES: Currency[] = ['RWF', 'UGX', 'CDF', 'TZS', 'USD', 'ETB', 'KES'];
+
+// Dynamic commodity validation - fetches live commodity IDs from the commodities tab
+// Cached alongside other sheet reads (60s via getSheetTab)
+export async function getValidCommodityIds(): Promise<string[]> {
+  const commodities = await getCommodities();
+  return commodities
+    .filter((c) => c.status === 'live')
+    .map((c) => c.id);
+}
+
+// New long format - one row per spot+commodity
+export async function getPricesLong(): Promise<Price[]> {
+  // Fetch prices and valid commodity IDs in parallel
+  const [rows, validCommodityIds] = await Promise.all([
+    getSheetTab('prices'),
+    getValidCommodityIds(),
+  ]);
+
+  return rows
+    .map((row) => {
+      const commodity_id = row.commodity_id;
+      const currency = (row.currency || 'RWF') as Currency;
+
+      // Skip invalid rows - validate against dynamic commodity list
+      if (!row.spot_id || !validCommodityIds.includes(commodity_id)) {
+        return null;
+      }
+
+      return {
+        spot_id: row.spot_id,
+        commodity_id: commodity_id as CommodityType,
+        price: parseNumOrNull(row.price),
+        currency: VALID_CURRENCIES.includes(currency) ? currency : 'RWF',
+        change_pct: parseNumOrNull(row.change_pct),
+        updated_at: row.updated_at || null,
+        reported_by: row.reported_by || '',
+        status: (row.status as 'live' | 'pending' | 'stale') || 'pending',
+      };
+    })
+    .filter((p): p is Price => p !== null);
+}
+
+// Get latest price for each spot+commodity combination
+export async function getLatestPrices(): Promise<PriceMap> {
+  const prices = await getPricesLong();
+  const priceMap: PriceMap = new Map();
+
+  // Latest entry wins (assumes sheet is sorted by updated_at ascending)
+  for (const price of prices) {
+    const key: PriceKey = `${price.spot_id}:${price.commodity_id}`;
+    priceMap.set(key, price);
+  }
+
+  return priceMap;
+}
+
+// Helper to get price for a specific spot and commodity
+export function getPriceFromMap(
+  priceMap: PriceMap,
+  spotId: string,
+  commodity: CommodityType
+): Price | undefined {
+  const key: PriceKey = `${spotId}:${commodity}`;
+  return priceMap.get(key);
 }
 
 export async function getConfig(): Promise<Record<string, string>> {

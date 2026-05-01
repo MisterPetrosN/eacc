@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { TrendingUp, TrendingDown, Info } from "lucide-react";
-import type { SpotWithPrice, SpreadRow } from "@/lib/types";
+import type { SpotWithPrices, SpreadRow } from "@/lib/types";
 
 interface DashboardData {
-  spots: SpotWithPrice[];
+  spots: SpotWithPrices[];
   spreads: SpreadRow[];
   config: Record<string, string>;
   exchangeRates: { ugx_to_usd: number; rwf_to_usd: number; source: 'sheet' | 'api' | 'default' };
@@ -69,8 +69,11 @@ export default function SpreadPage() {
   const rates = data?.exchangeRates || { ugx_to_usd: 1 / 3700, rwf_to_usd: 1 / 1280, source: 'default' as const };
   const rateSource = data?.exchangeRates?.source || 'default';
 
-  const buyPricePerKg = buySpot?.price?.maize_rwf || 0;
-  const sellPricePerKg = sellSpot?.price?.maize_rwf || 0;
+  // Find maize prices from long format
+  const buyMaizePrice = buySpot?.prices.find((p) => p.commodity_id === "maize");
+  const sellMaizePrice = sellSpot?.prices.find((p) => p.commodity_id === "maize");
+  const buyPricePerKg = buyMaizePrice?.price || 0;
+  const sellPricePerKg = sellMaizePrice?.price || 0;
 
   // Convert to USD per MT (1 MT = 1000 kg)
   const buyPriceUsdMt = buyPricePerKg * rates.ugx_to_usd * 1000;
