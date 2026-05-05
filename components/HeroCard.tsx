@@ -2,36 +2,36 @@
 
 import { Volume2, VolumeX, Star, TrendingUp, TrendingDown } from "lucide-react";
 import { useSpeech } from "@/hooks/useSpeech";
-import type { CommodityType } from "@/lib/types";
 import { SectionLabelPill, EntityPill } from "@/components/shared/Pills";
 
 interface HeroCardProps {
-  price: number;
-  commodity: CommodityType;
+  price: number | null;
+  commodityName: string;
+  commodityIcon: string;
   changePct?: number;
   currency?: "RWF" | "UGX" | "TZS" | "USD";
+  unit?: string; // "kg" for grains/produce, "L" for diesel/petrol
 }
 
-const commodityLabels: Record<CommodityType, { name: string; icon: string }> = {
-  maize: { name: "Maize", icon: "🌽" },
-  beans: { name: "Beans", icon: "🫘" },
-  soya: { name: "Soya", icon: "🫛" },
-  rice: { name: "Rice", icon: "🍚" },
-  palm_oil: { name: "Palm Oil", icon: "🌴" },
-  gold: { name: "Gold", icon: "🪙" },
-};
-
-export function HeroCard({ price, commodity, changePct = 0, currency = "RWF" }: HeroCardProps) {
+export function HeroCard({
+  price,
+  commodityName,
+  commodityIcon,
+  changePct = 0,
+  currency = "RWF",
+  unit = "kg"
+}: HeroCardProps) {
   const { speak, isSpeaking, stop } = useSpeech();
   const isPositive = changePct >= 0;
-  const commodityInfo = commodityLabels[commodity] || commodityLabels.maize;
+  const hasPrice = price !== null && price > 0;
 
   const handleSpeak = () => {
     if (isSpeaking) {
       stop();
-    } else {
+    } else if (hasPrice) {
+      const unitLabel = unit === "L" ? "liter" : "kilogram";
       speak(
-        `The Kigali City average ${commodityInfo.name} price is ${price} Rwandan Francs per kilogram`
+        `The Kigali City average ${commodityName} price is ${price} Rwandan Francs per ${unitLabel}`
       );
     }
   };
@@ -66,19 +66,19 @@ export function HeroCard({ price, commodity, changePct = 0, currency = "RWF" }: 
 
       {/* Commodity entity pill */}
       <div className="mb-3">
-        <EntityPill icon={commodityInfo.icon} variant="dark" accentColor="rgba(255,255,255,0.75)">
-          {commodityInfo.name}
+        <EntityPill icon={commodityIcon} variant="dark" accentColor="rgba(255,255,255,0.75)">
+          {commodityName}
         </EntityPill>
       </div>
 
       {/* Price - LOCKED: 76px hero number, 34px currency, EXTRA BOLD (900) */}
       <div className="font-outfit font-black text-[76px] text-white leading-none price-display mb-3 relative z-10">
-        {price.toLocaleString()}
+        {hasPrice ? price.toLocaleString() : "—"}
         <span className="text-[34px] font-black ml-2">{currency}</span>
       </div>
 
       {/* Delta pill - status pill variant */}
-      {changePct !== 0 && (
+      {hasPrice && changePct !== 0 && (
         <div
           className={`inline-flex items-center gap-1.5 px-[14px] py-[7px] rounded-full ${
             isPositive ? "bg-[var(--green-light)]" : "bg-[var(--red)]"

@@ -271,15 +271,18 @@ export default function DashboardPage() {
 
   const isCityFirstView = activeFilter === "all";
 
-  // Get average price dynamically from kigali_averages
-  const getAvgPrice = (): number => {
-    const commodityId = activeFilter === "all" ? "maize" : activeFilter;
-    return data.kigali_averages[commodityId] || 0;
+  // Get active commodity info for hero card
+  const activeCommodityId = activeFilter === "all" ? "maize" : activeFilter;
+  const activeCommodity = liveCommodities.find((c) => c.id === activeCommodityId);
+  const benchmarkPrice = data.kigali_averages[activeCommodityId] ?? null;
+
+  // Determine unit: "L" for diesel/petrol, "kg" for everything else
+  const getUnit = (commodityId: string): string => {
+    return ["diesel", "petrol", "fuel"].includes(commodityId) ? "L" : "kg";
   };
 
   const getChangePct = (): number => {
-    const commodity = activeFilter === "all" ? "maize" : activeFilter;
-    const key = `hero_change_${commodity}`;
+    const key = `hero_change_${activeCommodityId}`;
     return parseFloat(data.config[key] || "0");
   };
 
@@ -391,9 +394,11 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-3">
         {/* Main hero card */}
         <HeroCard
-          price={getAvgPrice()}
-          commodity={activeFilter === "all" ? "maize" : activeFilter}
+          price={benchmarkPrice}
+          commodityName={activeCommodity?.name || "Maize"}
+          commodityIcon={activeCommodity?.icon || "🌽"}
           changePct={getChangePct()}
+          unit={getUnit(activeCommodityId)}
         />
 
         {/* Right side cards */}
