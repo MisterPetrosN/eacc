@@ -72,7 +72,7 @@ function InviteContent() {
         <div className="bg-[var(--green)] rounded-2xl p-4 mb-4 text-center">
           <p className="text-sm text-white">
             <span className="font-bold">{referrerName}</span> from {referrerSpot} invited
-            you to join EACC
+            you to join Isoko Prices
           </p>
           <p className="text-xs text-white/70 mt-1">
             They earn +5 lottery tickets when you report for 2 weeks
@@ -219,7 +219,7 @@ function InviteContent() {
         className="w-full bg-[var(--amber)] text-[var(--ink)] rounded-xl py-4 px-6 flex items-center justify-center gap-2 font-bold text-base hover:opacity-90 transition-opacity mb-3"
       >
         <MessageSquare size={20} />
-        Join EACC via WhatsApp
+        Join Isoko Prices via WhatsApp
         <ChevronRight size={20} />
       </button>
       <p className="text-xs text-[var(--ink4)] text-center mb-6">

@@ -131,7 +131,7 @@ export default function LeaderboardPage() {
   const handleWhatsAppShare = () => {
     const url = `${window.location.origin}/invite`;
     const city = activeRegion === "All" ? "East Africa" : activeRegion;
-    const text = `Know a market agent in ${city}? Invite them to join EACC and earn +5 bonus tickets! ${url}`;
+    const text = `Know a market agent in ${city}? Invite them to join Isoko Prices and earn +5 bonus tickets! ${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -326,7 +326,7 @@ export default function LeaderboardPage() {
             Know a market agent in {activeRegion === "All" ? "your area" : activeRegion}?
           </p>
           <p className="text-xs text-[var(--ink3)]">
-            Invite them to join EACC and earn +5 bonus tickets
+            Invite them to join Isoko Prices and earn +5 bonus tickets
           </p>
         </div>
         <button

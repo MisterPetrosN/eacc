@@ -5,7 +5,7 @@
     "evening": "Good evening"
   },
   "header": {
-    "intelligence": "EACC Intelligence",
+    "intelligence": "Isoko Prices",
     "agentsLive": "Agents Live Now"
   },
   "bestPrices": {
@@ -87,5 +87,20 @@
   "market": {
     "open": "Market Open",
     "closed": "Closed"
+  },
+  "hero": {
+    "kigaliAverage": "Kigali city average",
+    "benchmark": "Benchmark",
+    "listen": "Listen to price",
+    "stop": "Stop"
+  },
+  "prices": {
+    "lowest": "Lowest prices across the region",
+    "highest": "Best prices across the region",
+    "noData": "No data",
+    "pending": "Pending"
+  },
+  "tts": {
+    "modelLoading": "Voice is loading, please wait..."
   }
 }

@@ -18,6 +18,7 @@ import { BestPriceComparison } from "@/components/BestPriceComparison";
 import { KigaliInfoStrip } from "@/components/KigaliInfoStrip";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { DashboardSkeleton } from "@/components/Skeleton";
+import { WhatsAppBanner } from "@/components/WhatsAppBanner";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type {
   DashboardData,
@@ -366,6 +367,9 @@ export default function DashboardPage() {
         <KigaliInfoStrip />
       </div>
 
+      {/* WhatsApp Follow Banner */}
+      <WhatsAppBanner />
+
       {/* Commodity Filter Pills - using pill design system */}
       <div className="flex flex-wrap gap-2">
         {filterPills.map((pill) => {
@@ -397,6 +401,7 @@ export default function DashboardPage() {
         <HeroCard
           price={benchmarkPrice}
           commodityName={activeCommodity?.name || "Maize"}
+          commodityId={activeCommodityId}
           commodityIcon={activeCommodity?.icon || "🌽"}
           changePct={getChangePct()}
           unit={getUnit(activeCommodityId)}

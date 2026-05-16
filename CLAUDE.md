@@ -28,10 +28,55 @@ Next.js 14, TypeScript, Tailwind, googleapis
 - `/api/dashboard` - All dashboard data, revalidate 60s
 - `/api/agent/[id]` - Personal agent stats
 - `/api/auth/[...nextauth]` - NextAuth handlers
+- `/api/tts` - Kinyarwanda text-to-speech via Hugging Face MMS
 - `/api/cron/daily-fix` - Daily price fix (08:00 CAT)
 - `/api/cron/streak-update` - Agent streak updates
 - `/api/cron/quorum-check` - Market quorum alerts
 - `/api/cron/lottery-draw` - Weekly lottery (Sunday 18:00)
+
+## i18n (Internationalization)
+
+**Supported Languages:**
+- EN (English)
+- RW (Kinyarwanda) - default, with native TTS
+- FR (Français)
+- SW (Kiswahili)
+
+**Files:**
+- `locales/en.json`, `rw.json`, `fr.json`, `sw.json` - Translation strings
+- `lib/i18n/LanguageContext.tsx` - Language provider with auto-detection
+- `lib/i18n.ts` - TTS phrase templates and commodity translations
+
+**Usage:**
+```tsx
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+const { t, language, setLanguage } = useLanguage();
+// t("greeting.morning") → "Mwaramutse" (if RW)
+```
+
+**Auto-detection:** IP-based country detection selects default language:
+- Rwanda → RW, DRC → FR, Tanzania/Kenya → SW, Uganda → EN
+
+## TTS (Text-to-Speech)
+
+**Kinyarwanda TTS:**
+- Model: `facebook/mms-tts-kin` (Massively Multilingual Speech)
+- API: Hugging Face Inference API via `/api/tts`
+- Fallback: Web Speech API (for other languages)
+
+**Usage:**
+```tsx
+import { useSpeech } from "@/hooks/useSpeech";
+const { speakAverage, speakPrice, isSpeaking, stop } = useSpeech();
+
+// Speak Kigali benchmark (for HeroCard)
+speakAverage("maize", 322, "kg"); // → "Ikigereranyo cy'igiciro cya Ibigori i Kigali..."
+
+// Speak specific spot price (for SpotCard)
+speakPrice("Goma", "beans", 450, "RWF", "kg");
+```
+
+**Environment:** Requires `HUGGINGFACE_API_KEY` for Kinyarwanda TTS.
 
 ## Pages
 
@@ -191,4 +236,7 @@ ADMIN_EMAILS=admin@example.com
 
 # Cron Jobs
 CRON_SECRET=
+
+# Hugging Face (Kinyarwanda TTS)
+HUGGINGFACE_API_KEY=
 ```

@@ -20,8 +20,37 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "EACC - East African Commodities Company",
-  description: "Live commodity price intelligence platform",
+  title: "Isoko Prices",
+  description: "Ibiciro by'ibicuruzwa mu karere - Live commodity prices across East Africa",
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.json",
+  openGraph: {
+    title: "Isoko Prices",
+    description: "Ibiciro by'ibicuruzwa mu karere - Live commodity prices across East Africa",
+    siteName: "Isoko Prices",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1254,
+        height: 1254,
+        alt: "Isoko Prices - East African Commodity Prices",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Isoko Prices",
+    description: "Ibiciro by'ibicuruzwa mu karere - Live commodity prices across East Africa",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

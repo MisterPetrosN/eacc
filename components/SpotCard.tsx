@@ -3,6 +3,7 @@
 import { MapPin, Volume2, VolumeX, TrendingUp, TrendingDown } from "lucide-react";
 import type { SpotWithPrices, CommodityType, Price } from "@/lib/types";
 import { useSpeech } from "@/hooks/useSpeech";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface SpotCardProps {
   spot: SpotWithPrices;
@@ -11,6 +12,7 @@ interface SpotCardProps {
 
 export function SpotCard({ spot, commodity }: SpotCardProps) {
   const { speakPrice, isSpeaking, stop } = useSpeech();
+  const { t } = useLanguage();
 
   const isPriority = spot.priority;
 
@@ -58,7 +60,9 @@ export function SpotCard({ spot, commodity }: SpotCardProps) {
     if (isSpeaking) {
       stop();
     } else {
-      speakPrice(spot.name, commodity, priceValue, getCurrency());
+      // Determine unit: L for diesel/petrol, kg for others
+      const unit = (commodity === 'diesel' || commodity === 'petrol') ? 'L' : 'kg';
+      speakPrice(spot.name, commodity, priceValue, getCurrency(), unit);
     }
   };
 
@@ -108,7 +112,7 @@ export function SpotCard({ spot, commodity }: SpotCardProps) {
         <button
           onClick={handleSpeak}
           className="w-[34px] h-[34px] rounded-full bg-[var(--surface)] flex items-center justify-center hover:bg-[var(--border)] transition-colors"
-          title={isSpeaking ? "Stop" : "Listen to price"}
+          title={isSpeaking ? t("hero.stop") : t("hero.listen")}
         >
           {isSpeaking ? (
             <VolumeX size={16} className="text-[var(--ink3)]" />
@@ -119,7 +123,7 @@ export function SpotCard({ spot, commodity }: SpotCardProps) {
         <div className="text-right">
           {priceData?.status === "pending" || !priceData?.updated_at ? (
             <span className="text-xs font-bold text-[var(--amber)]">
-              {priceData ? "Pending" : "No data"}
+              {priceData ? t("prices.pending") : t("prices.noData")}
             </span>
           ) : (
             <>

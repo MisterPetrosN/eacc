@@ -1,66 +1,96 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
+import {
+  speak,
+  stopSpeaking,
+  isSpeaking as checkIsSpeaking,
+  speakKigaliAverage,
+  speakCommodityPrice,
+  type SupportedLanguage,
+} from "@/lib/voiceUtils";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function useSpeech() {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const { language } = useLanguage();
 
-  const speak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      console.warn("Speech synthesis not supported");
-      return;
-    }
+  // Poll speaking state
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsSpeaking(checkIsSpeaking());
+    }, 100);
 
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    // Try to use an English voice
-    const voices = window.speechSynthesis.getVoices();
-    const englishVoice = voices.find(
-      (voice) => voice.lang.startsWith("en-") && voice.name.includes("Female")
-    ) || voices.find((voice) => voice.lang.startsWith("en-"));
-
-    if (englishVoice) {
-      utterance.voice = englishVoice;
-    }
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    return () => clearInterval(interval);
   }, []);
+
+  const speakText = useCallback(async (text: string, lang?: SupportedLanguage) => {
+    try {
+      setIsSpeaking(true);
+      await speak(text, lang || language);
+    } catch (error) {
+      console.error('[useSpeech] Error:', error);
+    }
+  }, [language]);
 
   const stop = useCallback(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-    }
+    stopSpeaking();
+    setIsSpeaking(false);
   }, []);
 
+  // Speak a single commodity price at a specific spot
   const speakPrice = useCallback(
-    (spotName: string, commodity: string, price: number | null, currency: string) => {
-      if (!price) {
-        speak(`No ${commodity} price available for ${spotName}`);
-        return;
+    async (
+      spotName: string,
+      commodity: string,
+      price: number | null,
+      currency: string,
+      unit: 'kg' | 'L' = 'kg'
+    ) => {
+      try {
+        setIsSpeaking(true);
+        await speakCommodityPrice(
+          spotName,
+          commodity,
+          price,
+          currency,
+          unit,
+          language
+        );
+      } catch (error) {
+        console.error('[useSpeech] Error:', error);
       }
-
-      const formattedPrice =
-        currency === "USD"
-          ? `${price.toFixed(2)} US dollars`
-          : `${Math.round(price)} ${currency}`;
-
-      speak(`${commodity} price at ${spotName} is ${formattedPrice}`);
     },
-    [speak]
+    [language]
   );
 
-  return { speak, stop, speakPrice, isSpeaking };
+  // Speak Kigali city average (for HeroCard)
+  const speakAverage = useCallback(
+    async (
+      commodityId: string,
+      price: number | null,
+      unit: 'kg' | 'L' = 'kg'
+    ) => {
+      try {
+        setIsSpeaking(true);
+        await speakKigaliAverage(
+          commodityId,
+          price,
+          unit,
+          language
+        );
+      } catch (error) {
+        console.error('[useSpeech] Error:', error);
+      }
+    },
+    [language]
+  );
+
+  return {
+    speak: speakText,
+    stop,
+    speakPrice,
+    speakAverage,
+    isSpeaking,
+  };
 }

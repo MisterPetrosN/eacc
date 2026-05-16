@@ -3,10 +3,12 @@
 import { Volume2, VolumeX, Star, TrendingUp, TrendingDown } from "lucide-react";
 import { useSpeech } from "@/hooks/useSpeech";
 import { SectionLabelPill, EntityPill } from "@/components/shared/Pills";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface HeroCardProps {
   price: number | null;
   commodityName: string;
+  commodityId: string; // Added for TTS lookup
   commodityIcon: string;
   changePct?: number;
   currency?: "RWF" | "UGX" | "TZS" | "USD";
@@ -16,12 +18,14 @@ interface HeroCardProps {
 export function HeroCard({
   price,
   commodityName,
+  commodityId,
   commodityIcon,
   changePct = 0,
   currency = "RWF",
   unit = "kg"
 }: HeroCardProps) {
-  const { speak, isSpeaking, stop } = useSpeech();
+  const { speakAverage, isSpeaking, stop } = useSpeech();
+  const { t } = useLanguage();
   const isPositive = changePct >= 0;
   const hasPrice = price !== null && price > 0;
 
@@ -29,10 +33,8 @@ export function HeroCard({
     if (isSpeaking) {
       stop();
     } else if (hasPrice) {
-      const unitLabel = unit === "L" ? "liter" : "kilogram";
-      speak(
-        `The Kigali City average ${commodityName} price is ${price} Rwandan Francs per ${unitLabel}`
-      );
+      // Use Kinyarwanda TTS via Hugging Face
+      speakAverage(commodityId, price, unit === "L" ? "L" : "kg");
     }
   };
 
@@ -42,7 +44,7 @@ export function HeroCard({
       <button
         onClick={handleSpeak}
         className="absolute top-4 right-4 w-[30px] h-[30px] rounded-full bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors z-10"
-        title={isSpeaking ? "Stop" : "Listen to price"}
+        title={isSpeaking ? t("hero.stop") : t("hero.listen")}
       >
         {isSpeaking ? (
           <VolumeX size={14} className="text-white" />
@@ -55,12 +57,12 @@ export function HeroCard({
       <div className="flex items-center gap-2 mb-4">
         {/* Entity pill (location) */}
         <EntityPill icon="📍" variant="light" accentColor="#374151">
-          Kigali city average
+          {t("hero.kigaliAverage")}
         </EntityPill>
         {/* Section label pill */}
         <SectionLabelPill variant="dark" accentColor="rgba(255,255,255,0.85)">
           <Star size={12} className="text-[var(--amber)]" fill="var(--amber)" />
-          Benchmark
+          {t("hero.benchmark")}
         </SectionLabelPill>
       </div>
 

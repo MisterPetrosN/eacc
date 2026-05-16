@@ -1,6 +1,15 @@
-// Voice utilities for reading prices aloud using Web Speech API
+// Voice utilities for reading prices aloud using Hugging Face Kinyarwanda TTS
+// Falls back to Web Speech API for non-Kinyarwanda languages
 
-export type SupportedLanguage = 'en' | 'rw' | 'sw' | 'lg';
+import {
+  type Locale,
+  localeToLower,
+  getCommodityName,
+  buildPriceAnnouncement,
+  ttsPhrases
+} from './i18n';
+
+export type SupportedLanguage = Locale;
 
 interface PriceData {
   value: number | null;
@@ -11,174 +20,249 @@ interface PriceData {
 interface CityPrices {
   maize?: PriceData;
   beans?: PriceData;
-  soya?: PriceData;
   rice?: PriceData;
+  cooking_bananas?: PriceData;
+  irish_potatoes?: PriceData;
+  maize_powder?: PriceData;
+  diesel?: PriceData;
+  petrol?: PriceData;
+  soya?: PriceData;
   palm_oil?: PriceData;
   fuel?: PriceData;
   gold?: PriceData;
 }
 
-const commodityNames: Record<SupportedLanguage, Record<string, string>> = {
-  en: {
-    maize: 'Maize',
-    beans: 'Beans',
-    soya: 'Soya',
-    rice: 'Rice',
-    palm_oil: 'Palm oil',
-    fuel: 'Fuel',
-    gold: 'Gold',
-  },
-  rw: {
-    maize: 'Ibigori',
-    beans: 'Ibishyimbo',
-    soya: 'Soya',
-    rice: 'Umuceri',
-    palm_oil: 'Amavuta ya palme',
-    fuel: 'Lisansi',
-    gold: 'Zahabu',
-  },
-  sw: {
-    maize: 'Mahindi',
-    beans: 'Maharage',
-    soya: 'Soya',
-    rice: 'Mchele',
-    palm_oil: 'Mafuta ya mawese',
-    fuel: 'Mafuta',
-    gold: 'Dhahabu',
-  },
-  lg: {
-    maize: 'Kasooli',
-    beans: 'Ebijanjaalo',
-    soya: 'Soya',
-    rice: 'Omuceere',
-    palm_oil: 'Amafuta ga palmu',
-    fuel: 'Amafuta',
-    gold: 'Zaabu',
-  },
-};
+// Track current audio playback
+let currentAudio: HTMLAudioElement | null = null;
+let isCurrentlySpeaking = false;
 
-const phrases: Record<SupportedLanguage, Record<string, string>> = {
-  en: {
-    intro: 'Prices for {city} today.',
-    up: 'up {percent} percent',
-    down: 'down {percent} percent',
-    unchanged: 'unchanged',
-    noData: 'no data',
-    perGram: 'per gram',
-  },
-  rw: {
-    intro: 'Ibiciro muri {city} uyu munsi.',
-    up: 'byazamutse {percent} ku ijana',
-    down: 'byagabanutse {percent} ku ijana',
-    unchanged: 'ntibyahindutse',
-    noData: 'nta makuru',
-    perGram: 'kuri garamu',
-  },
-  sw: {
-    intro: 'Bei za {city} leo.',
-    up: 'imepanda asilimia {percent}',
-    down: 'imeshuka asilimia {percent}',
-    unchanged: 'haijabadilika',
-    noData: 'hakuna data',
-    perGram: 'kwa gramu',
-  },
-  lg: {
-    intro: 'Emiwendo mu {city} leero.',
-    up: 'eyaze {percent} ku kikumi',
-    down: 'ekendeeze {percent} ku kikumi',
-    unchanged: 'tekyuuse',
-    noData: 'tewali data',
-    perGram: 'buli garamu',
-  },
-};
-
-export function isSpeechSupported(): boolean {
-  return typeof window !== 'undefined' && 'speechSynthesis' in window;
+// Check if we're in browser
+function isBrowser(): boolean {
+  return typeof window !== 'undefined';
 }
 
-export function speakPrices(
-  cityName: string,
-  prices: CityPrices,
-  currency: string,
-  lang: SupportedLanguage = 'en'
-): void {
+// Check if Web Speech API is available (fallback for non-Kinyarwanda)
+export function isSpeechSupported(): boolean {
+  return isBrowser() && 'speechSynthesis' in window;
+}
+
+// Stop any ongoing speech
+export function stopSpeaking(): void {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.src = '';
+    currentAudio = null;
+  }
+  isCurrentlySpeaking = false;
+
+  // Also stop Web Speech API if it's running
+  if (isSpeechSupported()) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+// Check if currently speaking
+export function isSpeaking(): boolean {
+  return isCurrentlySpeaking;
+}
+
+// Speak text using Hugging Face Kinyarwanda TTS
+async function speakWithHuggingFace(text: string): Promise<void> {
+  if (!isBrowser()) return;
+
+  try {
+    isCurrentlySpeaking = true;
+
+    const response = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.warn('[Voice] TTS API error:', error.error);
+
+      // If model is loading, retry after delay
+      if (response.status === 503) {
+        console.log('[Voice] Model loading, retrying in 3s...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        return speakWithHuggingFace(text);
+      }
+
+      throw new Error(error.error || 'TTS failed');
+    }
+
+    // Response is audio/flac from MMS model
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    // Stop any previous audio
+    stopSpeaking();
+
+    // Play the audio
+    currentAudio = new Audio(audioUrl);
+    isCurrentlySpeaking = true;
+
+    currentAudio.onended = () => {
+      isCurrentlySpeaking = false;
+      URL.revokeObjectURL(audioUrl);
+      currentAudio = null;
+    };
+
+    currentAudio.onerror = () => {
+      console.warn('[Voice] Audio playback error');
+      isCurrentlySpeaking = false;
+      URL.revokeObjectURL(audioUrl);
+      currentAudio = null;
+    };
+
+    await currentAudio.play();
+  } catch (error) {
+    console.error('[Voice] Hugging Face TTS error:', error);
+    isCurrentlySpeaking = false;
+    throw error;
+  }
+}
+
+// Speak text using Web Speech API (fallback)
+function speakWithWebSpeech(text: string, lang: string = 'en-US'): void {
   if (!isSpeechSupported()) {
-    console.log(`[Voice] Speech not supported. Would read prices for ${cityName}`);
+    console.log(`[Voice] Speech not supported. Would say: ${text}`);
     return;
   }
 
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
+  stopSpeaking();
+  isCurrentlySpeaking = true;
 
-  const langPhrases = phrases[lang] || phrases.en;
-  const langCommodities = commodityNames[lang] || commodityNames.en;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  utterance.onend = () => {
+    isCurrentlySpeaking = false;
+  };
+
+  utterance.onerror = () => {
+    isCurrentlySpeaking = false;
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// Main speak function - uses HF for Kinyarwanda, Web Speech for others
+export async function speak(text: string, lang: SupportedLanguage = 'RW'): Promise<void> {
+  if (!isBrowser()) return;
+
+  const lowerLang = localeToLower(lang);
+
+  // Use Hugging Face for Kinyarwanda
+  if (lowerLang === 'rw') {
+    try {
+      await speakWithHuggingFace(text);
+    } catch {
+      // Fall back to Web Speech if HF fails
+      console.log('[Voice] Falling back to Web Speech API');
+      speakWithWebSpeech(text, 'rw-RW');
+    }
+    return;
+  }
+
+  // Use Web Speech API for other languages
+  const langCodes: Record<string, string> = {
+    en: 'en-US',
+    rw: 'rw-RW',
+    fr: 'fr-FR',
+    sw: 'sw-KE',
+  };
+
+  speakWithWebSpeech(text, langCodes[lowerLang] || 'en-US');
+}
+
+// Speak prices for a city
+export async function speakPrices(
+  cityName: string,
+  prices: CityPrices,
+  currency: string,
+  lang: SupportedLanguage = 'RW'
+): Promise<void> {
+  if (!isBrowser()) return;
+
+  const phrases = ttsPhrases[lang] || ttsPhrases.RW;
 
   // Build the speech text
-  let text = langPhrases.intro.replace('{city}', cityName) + ' ';
+  let text = phrases.priceIntro.replace('{city}', cityName) + ' ';
 
-  const commodityOrder = ['maize', 'beans', 'soya', 'rice', 'palm_oil', 'fuel', 'gold'];
+  const commodityOrder = ['maize', 'beans', 'rice', 'cooking_bananas', 'irish_potatoes', 'maize_powder', 'diesel', 'petrol'];
 
   for (const commodity of commodityOrder) {
     const price = prices[commodity as keyof CityPrices];
     if (!price || price.value === null) continue;
 
-    const name = langCommodities[commodity] || commodity;
-    const value = price.value;
+    const name = getCommodityName(commodity, lang);
+    const value = Math.round(price.value);
     const change = price.change;
-    const isGold = commodity === 'gold';
 
-    text += `${name}, ${value} ${isGold ? 'dollars' : currency}`;
-
-    if (isGold) {
-      text += ` ${langPhrases.perGram}`;
-    }
+    text += `${name}, ${value.toLocaleString()} ${currency}`;
 
     if (change !== null && change !== 0) {
       const changeText = change > 0
-        ? langPhrases.up.replace('{percent}', Math.abs(change).toFixed(1))
-        : langPhrases.down.replace('{percent}', Math.abs(change).toFixed(1));
+        ? phrases.priceUp.replace('{percent}', Math.abs(change).toFixed(1))
+        : phrases.priceDown.replace('{percent}', Math.abs(change).toFixed(1));
       text += `, ${changeText}`;
     }
 
     text += '. ';
   }
 
-  // Create and speak the utterance
-  const utterance = new SpeechSynthesisUtterance(text);
-
-  // Set language code for better pronunciation
-  const langCodes: Record<SupportedLanguage, string> = {
-    en: 'en-US',
-    rw: 'rw-RW', // May fall back to default
-    sw: 'sw-KE',
-    lg: 'lg-UG', // May fall back to default
-  };
-
-  utterance.lang = langCodes[lang] || 'en-US';
-  utterance.rate = 0.9; // Slightly slower for clarity
-  utterance.pitch = 1;
-  utterance.volume = 1;
-
-  window.speechSynthesis.speak(utterance);
+  await speak(text, lang);
 }
 
-export function stopSpeaking(): void {
-  if (isSpeechSupported()) {
-    window.speechSynthesis.cancel();
+// Speak a single commodity price
+export async function speakCommodityPrice(
+  spotName: string,
+  commodityId: string,
+  price: number | null,
+  currency: string,
+  unit: 'kg' | 'L' = 'kg',
+  lang: SupportedLanguage = 'RW'
+): Promise<void> {
+  if (!isBrowser()) return;
+
+  const phrases = ttsPhrases[lang] || ttsPhrases.RW;
+
+  if (!price) {
+    const commodityName = getCommodityName(commodityId, lang);
+    await speak(`${phrases.noData} ${commodityName} ${spotName}`, lang);
+    return;
   }
+
+  const text = buildPriceAnnouncement(lang, commodityId, price, currency, unit, spotName);
+  await speak(text, lang);
 }
 
-export function isSpeaking(): boolean {
-  if (!isSpeechSupported()) return false;
-  return window.speechSynthesis.speaking;
+// Speak Kigali average price (for HeroCard)
+export async function speakKigaliAverage(
+  commodityId: string,
+  price: number | null,
+  unit: 'kg' | 'L' = 'kg',
+  lang: SupportedLanguage = 'RW'
+): Promise<void> {
+  if (!isBrowser() || !price) return;
+
+  const text = buildPriceAnnouncement(lang, commodityId, price, 'RWF', unit, 'Kigali');
+  await speak(text, lang);
 }
 
 // Play a small beep for audio feedback
 export function playTapSound(): void {
-  if (typeof window === 'undefined') return;
+  if (!isBrowser()) return;
 
   try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const audioContext = new AudioContextClass();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
@@ -195,6 +279,5 @@ export function playTapSound(): void {
     oscillator.stop(audioContext.currentTime + 0.1);
   } catch {
     // Silent fail - audio feedback is nice-to-have
-    console.log('[Voice] Could not play tap sound');
   }
 }

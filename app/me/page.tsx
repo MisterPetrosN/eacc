@@ -70,7 +70,7 @@ function MyStatsContent() {
             No agent ID provided
           </h2>
           <p className="text-sm text-[var(--ink3)] mb-4">
-            Ask your EACC contact for your personal link to view your stats.
+            Ask your Isoko Prices contact for your personal link to view your stats.
           </p>
           <p className="text-xs text-[var(--ink4)]">
             Your link looks like: /me?agent=kimironko-patrick
@@ -92,7 +92,7 @@ function MyStatsContent() {
             We couldn&apos;t find an agent with ID &quot;{agentId}&quot;.
           </p>
           <p className="text-xs text-[var(--ink4)]">
-            Ask your EACC contact for your correct personal link.
+            Ask your Isoko Prices contact for your correct personal link.
           </p>
         </div>
       </div>
@@ -141,7 +141,7 @@ function MyStatsContent() {
 
   const handleWhatsAppShare = () => {
     const url = `${window.location.origin}/invite?ref=${agentId}`;
-    const text = `Join EACC and earn cash reporting commodity prices! ${url}`;
+    const text = `Join Isoko Prices and earn cash reporting commodity prices! ${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
