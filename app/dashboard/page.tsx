@@ -96,7 +96,8 @@ export default function DashboardPage() {
     };
 
     fetchDashboard();
-    const interval = setInterval(fetchDashboard, 60000);
+    // Refresh every 30 seconds to show live price changes
+    const interval = setInterval(fetchDashboard, 30000);
 
     return () => {
       isMounted = false;

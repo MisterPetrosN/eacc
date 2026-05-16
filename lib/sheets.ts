@@ -12,7 +12,7 @@ function getAuth() {
   return new google.auth.JWT({
     email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
     key: privateKey,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 }
 
@@ -156,3 +156,25 @@ export const getExchangeRates = unstable_cache(
   ['exchange-rates'],
   { revalidate: 300 } // Cache for 5 minutes
 );
+
+// Append rows to a sheet tab
+export async function appendToSheet(tabName: string, rows: string[][]): Promise<number> {
+  const auth = getAuth();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+  if (!spreadsheetId) {
+    throw new Error('Missing GOOGLE_SPREADSHEET_ID');
+  }
+
+  const response = await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: tabName,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: rows,
+    },
+  });
+
+  return response.data.updates?.updatedRows || 0;
+}

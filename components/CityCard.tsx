@@ -18,7 +18,7 @@ import {
 interface PriceData {
   value: number | null;
   change: number | null;
-  currency: string;
+  currency?: string;
   unit?: string;
   reportedAt?: string;
 }
@@ -59,6 +59,7 @@ function CommodityTile({
   price,
   change,
   currency,
+  cityCurrency,
   onClick,
 }: {
   emoji: string;
@@ -66,14 +67,17 @@ function CommodityTile({
   price: number;
   change: number | null;
   currency: Currency;
+  cityCurrency: Currency;
   onClick?: () => void;
 }) {
-  const isRWF = currency === PRIMARY_CURRENCY;
-  const rwfPrice = isRWF ? price : toRWF(price, currency);
+  // Use price's currency if available, otherwise use city's currency
+  const actualCurrency = currency || cityCurrency;
+  const isRWF = actualCurrency === PRIMARY_CURRENCY;
+  const rwfPrice = isRWF ? price : toRWF(price, actualCurrency);
 
-  // Colors based on source currency (for background tinting)
-  const isUGX = currency === "UGX";
-  const bgColor = isUGX ? "#E6F1FB" : "#FEF9E7";
+  // Colors based on city currency (for background tinting)
+  const isUGXCity = cityCurrency === "UGX";
+  const bgColor = isUGXCity ? "#E6F1FB" : "#FEF9E7";
   const labelColor = "var(--ink3, #6B7280)";
   const priceColor = "var(--ink, #111827)";
 
@@ -83,17 +87,17 @@ function CommodityTile({
       className="text-left rounded-lg transition-all hover:opacity-90 active:scale-[0.98] flex flex-col"
       style={{
         backgroundColor: bgColor,
-        padding: "16px",
-        minHeight: "115px",
+        padding: "14px",
+        minHeight: "105px",
       }}
-      aria-label={`${name}: ${formatNumber(rwfPrice)} RWF${!isRWF ? `, approximately ${formatNumber(price)} ${currency}` : ""}`}
+      aria-label={`${name}: ${formatNumber(rwfPrice)} RWF`}
     >
       {/* TOP ROW: Label (left) + Percent change (right) - METADATA */}
       <div className="flex items-center justify-between gap-1.5 mb-2">
         {/* Left: emoji + name */}
         <div className="flex items-center gap-1.5">
           <CommodityEmoji emoji={emoji} className="text-[1rem] md:text-[1.125rem]" />
-          <span className="text-[14px] md:text-[16px] font-normal" style={{ color: labelColor }}>
+          <span className="text-[13px] md:text-[15px] font-normal" style={{ color: labelColor }}>
             {name}
           </span>
         </div>
@@ -102,24 +106,12 @@ function CommodityTile({
         <ChangeIndicator change={change} />
       </div>
 
-      {/* MIDDLE: Price CENTERED - HERO ELEMENT */}
+      {/* MIDDLE: Price CENTERED - ALWAYS RWF */}
       <div className="flex-1 flex flex-col items-center justify-center">
-        {/* PRIMARY: Always RWF - centered, hero size, EXTRA BOLD (900) */}
-        {/* Use 28px on mobile for 4-digit prices to avoid cramping */}
-        <div className="font-outfit text-[28px] md:text-[44px] font-black leading-none text-center" style={{ color: priceColor }}>
+        <div className="font-outfit text-[26px] md:text-[40px] font-black leading-none text-center" style={{ color: priceColor }}>
           {formatNumber(rwfPrice)}
-          <span className="text-[11px] md:text-[13px] font-semibold ml-1 text-gray-500 align-baseline">RWF</span>
+          <span className="text-[10px] md:text-[12px] font-semibold ml-1 text-gray-500 align-baseline">RWF</span>
         </div>
-
-        {/* SECONDARY: UGX conversion pill centered below price */}
-        {!isRWF && (
-          <span
-            className="text-[11px] font-medium px-2 py-0.5 rounded-full mt-2"
-            style={{ backgroundColor: "#FFFFFF", color: "#185FA5" }}
-          >
-            ≈ {formatNumber(price)} {currency}
-          </span>
-        )}
       </div>
     </button>
   );
@@ -132,22 +124,22 @@ function EmptyTile({ emoji, name }: { emoji: string; name: string }) {
       className="rounded-lg flex flex-col opacity-55"
       style={{
         backgroundColor: "var(--surface, #F0F2F5)",
-        padding: "16px",
-        minHeight: "115px",
+        padding: "14px",
+        minHeight: "105px",
       }}
     >
       {/* TOP ROW: Label (left) + placeholder % (right) */}
       <div className="flex items-center justify-between gap-1.5 mb-2">
         <div className="flex items-center gap-1.5">
           <CommodityEmoji emoji={emoji} className="text-[1rem] md:text-[1.125rem]" />
-          <span className="text-[14px] md:text-[16px] font-normal text-gray-500">{name}</span>
+          <span className="text-[13px] md:text-[15px] font-normal text-gray-500">{name}</span>
         </div>
         <span className="text-[11px] text-gray-400">—</span>
       </div>
 
       {/* MIDDLE: em-dash centered where price would be */}
       <div className="flex-1 flex items-center justify-center">
-        <span className="font-outfit text-[28px] md:text-[44px] font-black text-gray-400 leading-none">—</span>
+        <span className="font-outfit text-[26px] md:text-[40px] font-black text-gray-400 leading-none">—</span>
       </div>
     </div>
   );
@@ -160,8 +152,8 @@ function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
       className="rounded-lg relative overflow-hidden"
       style={{
         backgroundColor: "var(--surface, #F0F2F5)",
-        padding: "16px",
-        minHeight: "115px",
+        padding: "14px",
+        minHeight: "105px",
       }}
     >
       {/* Blurred content - financial dashboard layout */}
@@ -170,13 +162,13 @@ function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
         <div className="flex items-center justify-between gap-1.5 mb-2">
           <div className="flex items-center gap-1.5">
             <CommodityEmoji emoji={emoji} className="text-[1rem] md:text-[1.125rem]" />
-            <span className="text-[14px] md:text-[16px] font-normal text-gray-500">{name}</span>
+            <span className="text-[13px] md:text-[15px] font-normal text-gray-500">{name}</span>
           </div>
           <span className="text-[11px] text-gray-400">+1.2%</span>
         </div>
         {/* MIDDLE: Centered price */}
         <div className="flex-1 flex items-center justify-center">
-          <span className="font-outfit text-[28px] md:text-[44px] font-black text-gray-400 leading-none">450</span>
+          <span className="font-outfit text-[26px] md:text-[40px] font-black text-gray-400 leading-none">450</span>
         </div>
       </div>
 
@@ -260,6 +252,7 @@ export function CityCard({ city, commodities, onReportPrice }: CityCardProps) {
                 price={priceData!.value!}
                 change={priceData!.change}
                 currency={(priceData?.currency as Currency) || cityCurrency}
+                cityCurrency={cityCurrency}
                 onClick={() => handlePriceClick(commodity.id)}
               />
             );

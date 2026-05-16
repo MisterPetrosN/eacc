@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   getSpots,
-  getLatestPrices,
+  getPricesWithFluctuations,
   getConfig,
   getCommodities,
   getAgents,
@@ -14,10 +14,10 @@ import type { SpotWithPrices, DashboardData, Price } from '@/lib/types';
 export async function GET() {
   try {
     // Fetch all data in parallel
-    const [spots, priceMap, config, commodities, agents, lottery, spreads, exchangeRates] =
+    const [spots, prices, config, commodities, agents, lottery, spreads, exchangeRates] =
       await Promise.all([
         getSpots(),
-        getLatestPrices(),
+        getPricesWithFluctuations(),
         getConfig(),
         getCommodities(),
         getAgents(),
@@ -26,9 +26,9 @@ export async function GET() {
         getExchangeRates(),
       ]);
 
-    // Convert priceMap to array grouped by spot_id
+    // Group prices by spot_id
     const pricesBySpot = new Map<string, Price[]>();
-    for (const [, price] of Array.from(priceMap.entries())) {
+    for (const price of prices) {
       const spotPrices = pricesBySpot.get(price.spot_id) || [];
       spotPrices.push(price);
       pricesBySpot.set(price.spot_id, spotPrices);
@@ -82,7 +82,8 @@ export async function GET() {
 
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'max-age=60, stale-while-revalidate=300',
+        // Very short cache for live price fluctuations (30 sec cycle)
+        'Cache-Control': 'max-age=15, stale-while-revalidate=30',
       },
     });
   } catch (error) {

@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { type Currency } from "@/components/shared/Pills";
 import {
-  PRIMARY_CURRENCY,
   P2P_RATES,
   toRWF,
   formatNumber,
@@ -25,13 +24,14 @@ interface CityData {
   flag: string;
   currency: string;
   prices: {
-    maize?: PriceData;
-    beans?: PriceData;
-    rice?: PriceData;
-    igitoki?: PriceData;
-    irish_potatoes?: PriceData;
-    sweet_potatoes?: PriceData;
-    fuel?: PriceData;
+    maize?: PriceData & { currency?: string };
+    beans?: PriceData & { currency?: string };
+    rice?: PriceData & { currency?: string };
+    cooking_bananas?: PriceData & { currency?: string };
+    irish_potatoes?: PriceData & { currency?: string };
+    maize_powder?: PriceData & { currency?: string };
+    diesel?: PriceData & { currency?: string };
+    petrol?: PriceData & { currency?: string };
   };
 }
 
@@ -64,8 +64,9 @@ const commodities = [
   { key: "maize", name: "Maize", emoji: "🌽" },
   { key: "beans", name: "Beans", emoji: "🫘" },
   { key: "rice", name: "Rice", emoji: "🍚" },
-  { key: "igitoki", name: "Igitoki", emoji: "🍌" },
-  { key: "fuel", name: "Fuel", emoji: "⛽" },
+  { key: "cooking_bananas", name: "Igitoki", emoji: "🍌" },
+  { key: "irish_potatoes", name: "Potatoes", emoji: "🥔" },
+  { key: "maize_powder", name: "Maize Powder", emoji: "🌾" },
 ];
 
 const ARB_THRESHOLD = 12; // >= 12% is "Arb opportunity"
@@ -123,12 +124,8 @@ function ArbCard({ data }: { data: ComparisonData }) {
   const isHighArb = spread >= ARB_THRESHOLD;
   const bgColor = isHighArb ? "#FEF9E7" : "#FFFFFF";
 
-  const expensiveIsNonRWF = mostExpensive.currency !== PRIMARY_CURRENCY;
-
-  // Source city color: always green
-  const sourceColor = "#3B6D11";
-  // Destination city color: blue for non-RWF, green for RWF
-  const destColor = expensiveIsNonRWF ? "#185FA5" : "#3B6D11";
+  // Both cities use green color since all prices are in RWF
+  const cityColor = "#3B6D11";
 
   return (
     <article
@@ -137,8 +134,8 @@ function ArbCard({ data }: { data: ComparisonData }) {
         backgroundColor: bgColor,
         border: "0.5px solid rgba(0,0,0,0.08)",
         padding: "14px 16px",
-        minHeight: "120px",
-        width: "260px",
+        minHeight: "110px",
+        width: "240px",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       }}
       aria-label={`${name}: ${spread.toFixed(1)}% arbitrage opportunity from ${cheapest.cityName} to ${mostExpensive.cityName}`}
@@ -156,41 +153,29 @@ function ArbCard({ data }: { data: ComparisonData }) {
 
       {/* MIDDLE: City labels row */}
       <div className="flex items-center justify-between mb-1 px-1">
-        <span className="text-[10px] font-medium" style={{ color: sourceColor }}>
+        <span className="text-[10px] font-medium" style={{ color: cityColor }}>
           {cheapest.flag} {cheapest.cityName}
         </span>
         <span className="text-[12px] text-gray-400">→</span>
-        <span className="text-[10px] font-medium" style={{ color: destColor }}>
+        <span className="text-[10px] font-medium" style={{ color: cityColor }}>
           {mostExpensive.flag} {mostExpensive.cityName}
         </span>
       </div>
 
-      {/* PRICES ROW: Two prices side-by-side - SMALLER to fit cleanly, EXTRA BOLD (900) */}
+      {/* PRICES ROW: Two prices side-by-side - ALL IN RWF */}
       <div className="flex items-baseline justify-between px-1">
         {/* Source price (cheaper) */}
-        <div className="font-outfit text-[22px] md:text-[28px] font-black text-[var(--ink)] leading-none">
+        <div className="font-outfit text-[20px] md:text-[26px] font-black text-[var(--ink)] leading-none">
           {formatNumber(cheapest.rwfPrice)}
           <span className="text-[9px] md:text-[10px] font-semibold ml-0.5 text-gray-500">RWF</span>
         </div>
 
         {/* Destination price (more expensive) */}
-        <div className="font-outfit text-[20px] md:text-[24px] font-black text-gray-600 leading-none">
+        <div className="font-outfit text-[18px] md:text-[22px] font-black text-gray-600 leading-none">
           {formatNumber(mostExpensive.rwfPrice)}
           <span className="text-[9px] md:text-[10px] font-semibold ml-0.5 text-gray-400">RWF</span>
         </div>
       </div>
-
-      {/* UGX conversion pill (if destination is non-RWF) */}
-      {expensiveIsNonRWF && (
-        <div className="flex justify-end mt-1.5 px-1">
-          <span
-            className="text-[9px] font-medium px-1.5 py-0.5 rounded-full"
-            style={{ backgroundColor: "#E6F1FB", color: "#185FA5" }}
-          >
-            ≈ {formatNumber(mostExpensive.price)} {mostExpensive.currency}
-          </span>
-        </div>
-      )}
     </article>
   );
 }
@@ -256,19 +241,21 @@ export function BestPriceComparison({ cities }: BestPriceComparisonProps) {
   }, []);
 
   // Calculate best prices for each commodity (compare by RWF value)
+  // Always use RWF as the display currency
   const getBestPrices = (commodityKey: string): { cheapest: CityPrice; mostExpensive: CityPrice; spread: number } | null => {
     const citiesWithPrice: CityPrice[] = [];
 
     for (const city of cities) {
       const priceData = city.prices[commodityKey as keyof typeof city.prices];
       if (priceData?.value !== null && priceData?.value !== undefined) {
-        const currency = city.currency as Currency;
+        // Use the price's own currency if available, otherwise fall back to city currency
+        const currency = (priceData.currency as Currency) || (city.currency as Currency);
         const rwfPrice = toRWF(priceData.value, currency);
         citiesWithPrice.push({
           cityName: city.name,
           flag: city.flag,
           price: priceData.value,
-          currency,
+          currency: "RWF", // Always display as RWF
           rwfPrice,
         });
       }

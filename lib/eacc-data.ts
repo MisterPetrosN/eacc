@@ -185,3 +185,216 @@ export async function getSpreads(): Promise<SpreadRow[]> {
 
 // Re-export exchange rates
 export { getExchangeRates };
+
+// ============ PRICE FLUCTUATION & FALLBACK SYSTEM ============
+
+interface PriceFallback {
+  source_spot: string;
+  target_spot: string;
+  min_pct: number;
+  max_pct: number;
+}
+
+// Get price fallback rules from sheet
+export async function getPriceFallbacks(): Promise<PriceFallback[]> {
+  try {
+    const rows = await getSheetTab('price_fallbacks');
+    return rows.map((row) => ({
+      source_spot: row.source_spot || '',
+      target_spot: row.target_spot || '',
+      min_pct: parseNum(row.min_pct),
+      max_pct: parseNum(row.max_pct),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// Seeded random for consistent fluctuations within time window
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+// Get fluctuation seed based on configurable time windows
+function getFluctuationSeed(spotId: string, commodityId: string, intervalSeconds: number): number {
+  const now = Date.now();
+  const interval = intervalSeconds * 1000;
+  const timeWindow = Math.floor(now / interval);
+
+  // Create unique seed from time + spot + commodity
+  let hash = timeWindow;
+  for (let i = 0; i < spotId.length; i++) {
+    hash = ((hash << 5) - hash) + spotId.charCodeAt(i);
+  }
+  for (let i = 0; i < commodityId.length; i++) {
+    hash = ((hash << 5) - hash) + commodityId.charCodeAt(i);
+  }
+  return hash;
+}
+
+// Determine which prices should fluctuate this interval
+// Returns true for only 2-3 cities with 1 commodity each
+function shouldFluctuate(
+  spotId: string,
+  commodityId: string,
+  allSpots: string[],
+  allCommodities: string[],
+  intervalSeconds: number
+): boolean {
+  const now = Date.now();
+  const interval = intervalSeconds * 1000;
+  const timeWindow = Math.floor(now / interval);
+
+  // Use time window to select which cities change (2-3 cities)
+  const numCities = 2 + Math.floor(seededRandom(timeWindow * 11) * 2); // 2-3 cities
+
+  // Select which cities will fluctuate
+  const selectedCityIndices: number[] = [];
+  for (let i = 0; i < numCities && i < allSpots.length; i++) {
+    const idx = Math.floor(seededRandom(timeWindow * 13 + i * 17) * allSpots.length);
+    if (!selectedCityIndices.includes(idx)) {
+      selectedCityIndices.push(idx);
+    }
+  }
+
+  const selectedCities = selectedCityIndices.map(i => allSpots[i]);
+
+  // Each selected city gets 1 commodity that fluctuates
+  if (!selectedCities.includes(spotId)) {
+    return false;
+  }
+
+  // Determine which commodity fluctuates for this city
+  const cityIndex = allSpots.indexOf(spotId);
+  const commoditySeed = timeWindow * 19 + cityIndex * 23;
+  const selectedCommodityIdx = Math.floor(seededRandom(commoditySeed) * allCommodities.length);
+  const selectedCommodity = allCommodities[selectedCommodityIdx];
+
+  return commodityId === selectedCommodity;
+}
+
+// Apply fluctuation to a price (±2% that returns to base)
+function applyFluctuation(
+  basePrice: number,
+  spotId: string,
+  commodityId: string,
+  fluctuationPct: number,
+  intervalSeconds: number
+): { price: number; change_pct: number } {
+  const seed = getFluctuationSeed(spotId, commodityId, intervalSeconds);
+  const random = seededRandom(seed);
+
+  // Convert to range [-fluctuationPct, +fluctuationPct]
+  const changePct = (random * 2 - 1) * fluctuationPct;
+  const newPrice = Math.round(basePrice * (1 + changePct / 100));
+
+  return {
+    price: newPrice,
+    change_pct: Math.round(changePct * 100) / 100,
+  };
+}
+
+// Apply percentage offset to derive price from source
+function derivePrice(sourcePrice: number, minPct: number, maxPct: number, seed: number): number {
+  const random = seededRandom(seed);
+  const pctOffset = minPct + random * (maxPct - minPct);
+  return Math.round(sourcePrice * (1 + pctOffset / 100));
+}
+
+// Get prices with fluctuations and fallbacks applied
+export async function getPricesWithFluctuations(): Promise<Price[]> {
+  const [basePrices, config, fallbacks, validCommodityIds, spots] = await Promise.all([
+    getPricesLong(),
+    getConfig(),
+    getPriceFallbacks(),
+    getValidCommodityIds(),
+    getSpots(),
+  ]);
+
+  const fluctuationEnabled = config.fluctuation_enabled === 'true';
+  const fluctuationPct = parseNum(config.fluctuation_pct) || 2;
+  // Interval in seconds - configurable via sheet (default 30 seconds)
+  const fluctuationInterval = parseNum(config.fluctuation_interval_sec) || 30;
+
+  // Build price map for lookups
+  const priceMap = new Map<string, Price>();
+  for (const price of basePrices) {
+    const key = `${price.spot_id}:${price.commodity_id}`;
+    priceMap.set(key, price);
+  }
+
+  const result: Price[] = [];
+  const activeSpots = spots.filter(s => s.active).map(s => s.id);
+
+  // Process each spot and commodity
+  for (const spotId of activeSpots) {
+    for (const commodityId of validCommodityIds) {
+      const key = `${spotId}:${commodityId}`;
+      let price = priceMap.get(key);
+
+      // If no price, try to derive from fallback source
+      if (!price || price.price === null) {
+        const fallback = fallbacks.find(f => f.target_spot === spotId);
+        if (fallback) {
+          const sourceKey = `${fallback.source_spot}:${commodityId}`;
+          const sourcePrice = priceMap.get(sourceKey);
+
+          if (sourcePrice && sourcePrice.price !== null) {
+            const seed = getFluctuationSeed(spotId, commodityId, fluctuationInterval);
+            const derivedValue = derivePrice(sourcePrice.price, fallback.min_pct, fallback.max_pct, seed);
+
+            price = {
+              spot_id: spotId,
+              commodity_id: commodityId as CommodityType,
+              price: derivedValue,
+              currency: sourcePrice.currency,
+              change_pct: 0,
+              updated_at: new Date().toISOString(),
+              reported_by: 'system',
+              status: 'live',
+            };
+          }
+        }
+      }
+
+      // Apply fluctuation if enabled and price exists
+      if (price && price.price !== null && fluctuationEnabled) {
+        // Check if this price should fluctuate this interval
+        const shouldChange = shouldFluctuate(
+          spotId,
+          commodityId,
+          activeSpots,
+          validCommodityIds,
+          fluctuationInterval
+        );
+
+        if (shouldChange) {
+          const { price: fluctuatedPrice, change_pct } = applyFluctuation(
+            price.price,
+            spotId,
+            commodityId,
+            fluctuationPct,
+            fluctuationInterval
+          );
+
+          result.push({
+            ...price,
+            price: fluctuatedPrice,
+            change_pct,
+          });
+        } else {
+          // No fluctuation this interval - keep base price
+          result.push({
+            ...price,
+            change_pct: 0,
+          });
+        }
+      } else if (price && price.price !== null) {
+        result.push(price);
+      }
+    }
+  }
+
+  return result;
+}
