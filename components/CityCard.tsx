@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { type Currency } from "@/components/shared/Pills";
 import type { CommodityRow } from "@/lib/types";
 import {
@@ -43,23 +44,17 @@ interface CityCardProps {
 }
 
 // ============================================================================
-// SUB-COMPONENTS
+// LIVE PRICE TILE - With flash animation on change
 // ============================================================================
 
-// ============================================================================
-// COMMODITY TILE - FINANCIAL DASHBOARD LAYOUT (Bloomberg/TradingView style)
-// Top: emoji+name LEFT, % TOP-RIGHT (metadata row)
-// Middle: price CENTERED (hero element)
-// Bottom: UGX conversion centered (if applicable)
-// ============================================================================
-
-function CommodityTile({
+function LivePriceTile({
   emoji,
   name,
   price,
   change,
   currency,
   cityCurrency,
+  commodityId,
   onClick,
 }: {
   emoji: string;
@@ -68,8 +63,37 @@ function CommodityTile({
   change: number | null;
   currency: Currency;
   cityCurrency: Currency;
+  commodityId: string;
   onClick?: () => void;
 }) {
+  const [flash, setFlash] = useState<"up" | "down" | null>(null);
+  const prevPriceRef = useRef<number>(price);
+  const prevChangeRef = useRef<number | null>(change);
+
+  // Detect price or change updates and trigger flash
+  useEffect(() => {
+    const prevPrice = prevPriceRef.current;
+    const prevChange = prevChangeRef.current;
+
+    // Check if change_pct changed (fluctuation happened)
+    if (change !== null && change !== 0 && change !== prevChange) {
+      setFlash(change > 0 ? "up" : "down");
+      const timer = setTimeout(() => setFlash(null), 1500);
+      return () => clearTimeout(timer);
+    }
+
+    // Also check if price itself changed
+    if (price !== prevPrice) {
+      const direction = price > prevPrice ? "up" : "down";
+      setFlash(direction);
+      const timer = setTimeout(() => setFlash(null), 1500);
+      prevPriceRef.current = price;
+      return () => clearTimeout(timer);
+    }
+
+    prevChangeRef.current = change;
+  }, [price, change]);
+
   // Use price's currency if available, otherwise use city's currency
   const actualCurrency = currency || cityCurrency;
   const isRWF = actualCurrency === PRIMARY_CURRENCY;
@@ -77,23 +101,46 @@ function CommodityTile({
 
   // Colors based on city currency (for background tinting)
   const isUGXCity = cityCurrency === "UGX";
-  const bgColor = isUGXCity ? "#E6F1FB" : "#FEF9E7";
+
+  // Flash colors
+  const getBackgroundColor = () => {
+    if (flash === "up") return "#DCFCE7"; // green-100
+    if (flash === "down") return "#FEE2E2"; // red-100
+    return isUGXCity ? "#E6F1FB" : "#FEF9E7";
+  };
+
+  const getPriceColor = () => {
+    if (flash === "up") return "#16A34A"; // green-600
+    if (flash === "down") return "#DC2626"; // red-600
+    return "var(--ink, #111827)";
+  };
+
   const labelColor = "var(--ink3, #6B7280)";
-  const priceColor = "var(--ink, #111827)";
 
   return (
     <button
       onClick={onClick}
-      className="text-left rounded-lg transition-all hover:opacity-90 active:scale-[0.98] flex flex-col"
+      className={`text-left rounded-lg flex flex-col relative overflow-hidden
+        hover:opacity-90 active:scale-[0.98]
+        transition-all duration-300 ease-out`}
       style={{
-        backgroundColor: bgColor,
+        backgroundColor: getBackgroundColor(),
         padding: "14px",
         minHeight: "105px",
+        transition: "background-color 0.3s ease-out",
       }}
       aria-label={`${name}: ${formatNumber(rwfPrice)} RWF`}
     >
+      {/* Flash overlay effect */}
+      {flash && (
+        <div
+          className={`absolute inset-0 pointer-events-none animate-pulse-once
+            ${flash === "up" ? "bg-green-400/20" : "bg-red-400/20"}`}
+        />
+      )}
+
       {/* TOP ROW: Label (left) + Percent change (right) - METADATA */}
-      <div className="flex items-center justify-between gap-1.5 mb-2">
+      <div className="flex items-center justify-between gap-1.5 mb-2 relative z-10">
         {/* Left: emoji + name */}
         <div className="flex items-center gap-1.5">
           <CommodityEmoji emoji={emoji} className="text-[1rem] md:text-[1.125rem]" />
@@ -102,16 +149,29 @@ function CommodityTile({
           </span>
         </div>
 
-        {/* Right: Percent change */}
-        <ChangeIndicator change={change} />
+        {/* Right: Percent change - enhanced visibility when flashing */}
+        <div className={`transition-transform duration-300 ${flash ? "scale-110" : ""}`}>
+          <ChangeIndicator change={change} />
+        </div>
       </div>
 
       {/* MIDDLE: Price CENTERED - ALWAYS RWF */}
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="font-outfit text-[26px] md:text-[40px] font-black leading-none text-center" style={{ color: priceColor }}>
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+        <div
+          className={`font-outfit text-[26px] md:text-[40px] font-black leading-none text-center
+            transition-all duration-300 ${flash ? "scale-105" : ""}`}
+          style={{ color: getPriceColor() }}
+        >
           {formatNumber(rwfPrice)}
           <span className="text-[10px] md:text-[12px] font-semibold ml-1 text-gray-500 align-baseline">RWF</span>
         </div>
+
+        {/* Live indicator dot when changing */}
+        {flash && (
+          <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full animate-ping
+            ${flash === "up" ? "bg-green-500" : "bg-red-500"}`}
+          />
+        )}
       </div>
     </button>
   );
@@ -245,8 +305,9 @@ export function CityCard({ city, commodities, onReportPrice }: CityCardProps) {
 
           if (hasPrice) {
             return (
-              <CommodityTile
+              <LivePriceTile
                 key={commodity.id}
+                commodityId={commodity.id}
                 emoji={commodity.icon}
                 name={commodity.name}
                 price={priceData!.value!}
