@@ -234,6 +234,9 @@ export default function DashboardPage() {
 
     // Process spots into cities - each spot maps to itself
     for (const spot of data.spots) {
+      // Skip inactive spots
+      if (!spot.active) continue;
+
       const cityKey = spot.id.toLowerCase();
 
       const config = cityConfigs[cityKey];
