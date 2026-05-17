@@ -313,9 +313,18 @@ export async function getPricesWithFluctuations(): Promise<Price[]> {
   ]);
 
   // Read from sheet config - update these in Google Sheet config tab
-  const fluctuationEnabled = config.fluctuation_enabled?.toLowerCase() !== 'false';
+  const fluctuationEnabledRaw = config.fluctuation_enabled;
+  const fluctuationEnabled = fluctuationEnabledRaw?.toLowerCase() !== 'false';
   const fluctuationPct = parseNum(config.fluctuation_pct) || 4;
   const fluctuationInterval = parseNum(config.fluctuation_interval_sec) || 10;
+
+  // Debug logging
+  console.log('[Fluctuation] Config:', {
+    raw: fluctuationEnabledRaw,
+    enabled: fluctuationEnabled,
+    pct: fluctuationPct,
+    interval: fluctuationInterval
+  });
 
   // Build price map for lookups
   const priceMap = new Map<string, Price>();
@@ -326,6 +335,8 @@ export async function getPricesWithFluctuations(): Promise<Price[]> {
 
   const result: Price[] = [];
   const activeSpots = spots.filter(s => s.active).map(s => s.id);
+
+  console.log('[Fluctuation] Active spots:', activeSpots.length, 'Commodities:', validCommodityIds.length);
 
   // Process each spot and commodity
   for (const spotId of activeSpots) {
@@ -377,6 +388,8 @@ export async function getPricesWithFluctuations(): Promise<Price[]> {
             fluctuationPct,
             fluctuationInterval
           );
+
+          console.log('[Fluctuation] Applied:', { spotId, commodityId, base: price.price, fluctuated: fluctuatedPrice, change_pct });
 
           result.push({
             ...price,
