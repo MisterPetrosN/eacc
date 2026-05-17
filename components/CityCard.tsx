@@ -60,7 +60,6 @@ function LivePriceTile({
   change,
   currency,
   cityCurrency,
-  commodityId,
   prevPrice,
   prevChange,
   onClick,
@@ -71,7 +70,6 @@ function LivePriceTile({
   change: number | null;
   currency: Currency;
   cityCurrency: Currency;
-  commodityId: string;
   prevPrice?: number;
   prevChange?: number | null;
   onClick?: () => void;
@@ -309,7 +307,6 @@ export function CityCard({ city, commodities, prevPrices, onReportPrice }: CityC
             return (
               <LivePriceTile
                 key={commodity.id}
-                commodityId={commodity.id}
                 emoji={commodity.icon}
                 name={commodity.name}
                 price={priceData!.value!}
