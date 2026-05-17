@@ -82,8 +82,8 @@ export async function GET() {
 
     return NextResponse.json(data, {
       headers: {
-        // Very short cache for live price fluctuations (30 sec cycle)
-        'Cache-Control': 'max-age=15, stale-while-revalidate=30',
+        // Very short cache for live price fluctuations (10 sec cycle)
+        'Cache-Control': 'max-age=5, stale-while-revalidate=10',
       },
     });
   } catch (error) {
