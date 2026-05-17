@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-// WhatsApp channels for different languages
+// WhatsApp channels - Kinyarwanda and English only
 const WHATSAPP_CHANNELS = [
   {
     id: "rw",
@@ -13,25 +13,11 @@ const WHATSAPP_CHANNELS = [
     url: "https://whatsapp.com/channel/0029VbCWE1Y2v1IuTcf3f91W",
   },
   {
-    id: "fr",
-    flag: "🇨🇩",
-    language: "Français (Goma)",
-    subtitle: "Prix quotidiens · Gratuit",
-    url: "https://whatsapp.com/channel/0029VbCWJuFD38CK5gpmOm33",
-  },
-  {
-    id: "sw",
+    id: "en",
     flag: "🌍",
-    language: "Swahili",
-    subtitle: "Bei za kila siku · Bure",
+    language: "English",
+    subtitle: "Daily prices · Free",
     url: "https://whatsapp.com/channel/0029VbComn7CHDygaXgijb0w",
-  },
-  {
-    id: "bi",
-    flag: "🇧🇮",
-    language: "Burundi",
-    subtitle: "Ibiciro vya buri musi · Ni ubuntu",
-    url: "https://whatsapp.com/channel/0029Vb7T27mA89MnI0S9dC3u",
   },
 ];
 
