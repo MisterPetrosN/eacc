@@ -73,7 +73,7 @@ export async function GET() {
     // Sort commodities by tab_order
     const sortedCommodities = [...commodities].sort((a, b) => a.tab_order - b.tab_order);
 
-    const data: DashboardData & { spreads: typeof spreads; exchangeRates: typeof exchangeRates; _debug?: { timestamp: number } } = {
+    const data: DashboardData & { spreads: typeof spreads; exchangeRates: typeof exchangeRates; _debug?: { timestamp: number; fluctuation?: typeof fluctuationDebug } } = {
       spots: spotsWithPrices,
       config,
       commodities: sortedCommodities,
