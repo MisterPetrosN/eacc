@@ -143,14 +143,56 @@ export default function DashboardPage() {
     // Group spots by city/region
     const cityMap = new Map<string, CityBundle>();
 
-    // Define city configurations
+    // Define city configurations - each spot shows individually
     const cityConfigs: Record<string, Partial<CityBundle>> = {
-      kigali: {
-        name: t("cities.kigali"),
-        subtitle: t("citySubtitles.kigali"),
+      kimironko: {
+        name: t("cities.kimironko"),
+        subtitle: t("citySubtitles.kimironko"),
         currency: "RWF",
         flag: "🇷🇼",
         country: "RW",
+      },
+      nyabugogo: {
+        name: t("cities.nyabugogo"),
+        subtitle: t("citySubtitles.nyabugogo"),
+        currency: "RWF",
+        flag: "🇷🇼",
+        country: "RW",
+      },
+      musanze: {
+        name: t("cities.musanze"),
+        subtitle: t("citySubtitles.musanze"),
+        currency: "RWF",
+        flag: "🇷🇼",
+        country: "RW",
+      },
+      huye: {
+        name: t("cities.huye"),
+        subtitle: t("citySubtitles.huye"),
+        currency: "RWF",
+        flag: "🇷🇼",
+        country: "RW",
+      },
+      rubavu: {
+        name: t("cities.rubavu"),
+        subtitle: t("citySubtitles.rubavu"),
+        currency: "RWF",
+        flag: "🇷🇼",
+        country: "RW",
+      },
+      owino: {
+        name: t("cities.owino"),
+        subtitle: t("citySubtitles.owino"),
+        currency: "UGX",
+        flag: "🇺🇬",
+        country: "UG",
+      },
+      mbarara: {
+        name: t("cities.mbarara"),
+        subtitle: t("citySubtitles.mbarara"),
+        currency: "UGX",
+        flag: "🇺🇬",
+        country: "UG",
       },
       goma: {
         name: t("cities.goma"),
@@ -168,39 +210,11 @@ export default function DashboardPage() {
         flag: "🇨🇩",
         country: "CD",
       },
-      kampala: {
-        name: t("cities.kampala"),
-        subtitle: t("citySubtitles.kampala"),
-        currency: "UGX",
-        flag: "🇺🇬",
-        country: "UG",
-      },
-      mbarara: {
-        name: t("cities.mbarara"),
-        subtitle: t("citySubtitles.mbarara"),
-        currency: "UGX",
-        flag: "🇺🇬",
-        country: "UG",
-      },
-      rusumo: {
-        name: t("cities.rusumo"),
-        subtitle: t("citySubtitles.rusumo"),
-        currency: "RWF",
-        flag: "🇷🇼",
-        country: "XB",
-      },
     };
 
-    // Process spots into cities
+    // Process spots into cities - each spot maps to itself
     for (const spot of data.spots) {
-      let cityKey = spot.id.toLowerCase();
-
-      // Map spots to cities
-      if (spot.id === "kimironko" || spot.id === "nyabugogo" || spot.id === "remera") {
-        cityKey = "kigali";
-      } else if (spot.id === "owino") {
-        cityKey = "kampala";
-      }
+      const cityKey = spot.id.toLowerCase();
 
       const config = cityConfigs[cityKey];
       if (!config) continue;

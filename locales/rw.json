@@ -41,20 +41,26 @@
     "fuel": "Peteroli"
   },
   "cities": {
-    "kigali": "Kigali",
-    "goma": "Goma",
-    "bukavu": "Bukavu",
-    "kampala": "Kampala",
+    "kimironko": "Kimironko",
+    "nyabugogo": "Nyabugogo",
+    "musanze": "Musanze",
+    "huye": "Huye",
+    "rubavu": "Rubavu",
+    "owino": "Owino",
     "mbarara": "Mbarara",
-    "rusumo": "Rusumo"
+    "goma": "Goma",
+    "bukavu": "Bukavu"
   },
   "citySubtitles": {
-    "kigali": "Rwanda · Amasoko 3 akora",
-    "goma": "DRC · Isoko ry'umupaka",
-    "bukavu": "DRC · Kivu y'Amajyepfo",
-    "kampala": "Uganda · Isoko ry'umurwa mukuru",
-    "mbarara": "Uganda · Ikigo cy'iburengerazuba",
-    "rusumo": "Rwanda · Umupaka wa Tanzania"
+    "kimironko": "Kigali · isoko nkuru",
+    "nyabugogo": "Kigali · ku bisiteri",
+    "musanze": "Intara y'Amajyaruguru",
+    "huye": "Intara y'Amajyepfo",
+    "rubavu": "Iburengerazuba · umupaka wa DRC",
+    "owino": "Kampala · isoko nkuru",
+    "mbarara": "Uganda · ikigo cy'iburengerazuba",
+    "goma": "DRC · Kivu y'Amajyaruguru",
+    "bukavu": "DRC · Kivu y'Amajyepfo"
   },
   "status": {
     "comingSoon": "Biraza vuba",

@@ -41,20 +41,26 @@
     "fuel": "Fuel"
   },
   "cities": {
-    "kigali": "Kigali",
-    "goma": "Goma",
-    "bukavu": "Bukavu",
-    "kampala": "Kampala",
+    "kimironko": "Kimironko",
+    "nyabugogo": "Nyabugogo",
+    "musanze": "Musanze",
+    "huye": "Huye",
+    "rubavu": "Rubavu",
+    "owino": "Owino",
     "mbarara": "Mbarara",
-    "rusumo": "Rusumo"
+    "goma": "Goma",
+    "bukavu": "Bukavu"
   },
   "citySubtitles": {
-    "kigali": "Rwanda · 3 markets live",
-    "goma": "DRC · border market",
-    "bukavu": "DRC · South Kivu",
-    "kampala": "Uganda · capital market",
+    "kimironko": "Kigali · main market",
+    "nyabugogo": "Kigali · bus station",
+    "musanze": "Northern Province",
+    "huye": "Southern Province",
+    "rubavu": "Western · DRC border",
+    "owino": "Kampala · main market",
     "mbarara": "Uganda · western hub",
-    "rusumo": "Rwanda · Tanzania border"
+    "goma": "DRC · North Kivu",
+    "bukavu": "DRC · South Kivu"
   },
   "status": {
     "comingSoon": "Coming soon",

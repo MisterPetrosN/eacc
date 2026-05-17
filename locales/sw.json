@@ -41,20 +41,26 @@
     "fuel": "Mafuta"
   },
   "cities": {
-    "kigali": "Kigali",
-    "goma": "Goma",
-    "bukavu": "Bukavu",
-    "kampala": "Kampala",
+    "kimironko": "Kimironko",
+    "nyabugogo": "Nyabugogo",
+    "musanze": "Musanze",
+    "huye": "Huye",
+    "rubavu": "Rubavu",
+    "owino": "Owino",
     "mbarara": "Mbarara",
-    "rusumo": "Rusumo"
+    "goma": "Goma",
+    "bukavu": "Bukavu"
   },
   "citySubtitles": {
-    "kigali": "Rwanda · Masoko 3 yanafanya kazi",
-    "goma": "DRC · soko la mpaka",
-    "bukavu": "DRC · Kivu Kusini",
-    "kampala": "Uganda · soko la mji mkuu",
+    "kimironko": "Kigali · soko kuu",
+    "nyabugogo": "Kigali · stesheni ya basi",
+    "musanze": "Mkoa wa Kaskazini",
+    "huye": "Mkoa wa Kusini",
+    "rubavu": "Magharibi · mpaka wa DRC",
+    "owino": "Kampala · soko kuu",
     "mbarara": "Uganda · kituo cha magharibi",
-    "rusumo": "Rwanda · mpaka wa Tanzania"
+    "goma": "DRC · Kivu Kaskazini",
+    "bukavu": "DRC · Kivu Kusini"
   },
   "status": {
     "comingSoon": "Inakuja hivi karibuni",

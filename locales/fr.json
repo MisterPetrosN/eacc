@@ -41,20 +41,26 @@
     "fuel": "Carburant"
   },
   "cities": {
-    "kigali": "Kigali",
-    "goma": "Goma",
-    "bukavu": "Bukavu",
-    "kampala": "Kampala",
+    "kimironko": "Kimironko",
+    "nyabugogo": "Nyabugogo",
+    "musanze": "Musanze",
+    "huye": "Huye",
+    "rubavu": "Rubavu",
+    "owino": "Owino",
     "mbarara": "Mbarara",
-    "rusumo": "Rusumo"
+    "goma": "Goma",
+    "bukavu": "Bukavu"
   },
   "citySubtitles": {
-    "kigali": "Rwanda · 3 marchés actifs",
-    "goma": "RDC · marché frontalier",
-    "bukavu": "RDC · Sud-Kivu",
-    "kampala": "Ouganda · marché capital",
+    "kimironko": "Kigali · marché principal",
+    "nyabugogo": "Kigali · gare routière",
+    "musanze": "Province du Nord",
+    "huye": "Province du Sud",
+    "rubavu": "Ouest · frontière RDC",
+    "owino": "Kampala · marché principal",
     "mbarara": "Ouganda · centre ouest",
-    "rusumo": "Rwanda · frontière Tanzanie"
+    "goma": "RDC · Nord-Kivu",
+    "bukavu": "RDC · Sud-Kivu"
   },
   "status": {
     "comingSoon": "Bientôt disponible",
