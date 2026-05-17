@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { type Currency } from "@/components/shared/Pills";
 import type { CommodityRow } from "@/lib/types";
 import {
@@ -36,9 +36,15 @@ interface CityData {
   prices: Record<string, PriceData | undefined>;
 }
 
+interface PrevPriceData {
+  price: number;
+  change: number | null;
+}
+
 interface CityCardProps {
   city: CityData;
   commodities: CommodityRow[];
+  prevPrices?: Record<string, PrevPriceData>;
   onReportPrice?: (cityId: string, commodity: string) => void;
   onPlayVoice?: (cityId: string) => void;
 }
@@ -55,6 +61,8 @@ function LivePriceTile({
   currency,
   cityCurrency,
   commodityId,
+  prevPrice,
+  prevChange,
   onClick,
 }: {
   emoji: string;
@@ -64,45 +72,29 @@ function LivePriceTile({
   currency: Currency;
   cityCurrency: Currency;
   commodityId: string;
+  prevPrice?: number;
+  prevChange?: number | null;
   onClick?: () => void;
 }) {
   const [flash, setFlash] = useState<"up" | "down" | null>(null);
-  const prevPriceRef = useRef<number>(price);
-  const prevChangeRef = useRef<number | null>(change);
-  const isFirstRender = useRef(true);
 
   // Detect price or change updates and trigger flash
   useEffect(() => {
-    // Skip first render to avoid flashing on page load
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      prevPriceRef.current = price;
-      prevChangeRef.current = change;
-      return;
-    }
-
-    const prevChange = prevChangeRef.current;
-
-    // Check if change_pct changed (fluctuation happened)
+    // Check if change_pct is non-zero and different from previous
     if (change !== null && change !== 0 && change !== prevChange) {
       setFlash(change > 0 ? "up" : "down");
       const timer = setTimeout(() => setFlash(null), 2000);
-      prevChangeRef.current = change;
-      prevPriceRef.current = price;
       return () => clearTimeout(timer);
     }
 
     // Also check if price itself changed
-    const prevPrice = prevPriceRef.current;
-    if (price !== prevPrice) {
+    if (prevPrice !== undefined && price !== prevPrice) {
       const direction = price > prevPrice ? "up" : "down";
       setFlash(direction);
       const timer = setTimeout(() => setFlash(null), 2000);
-      prevPriceRef.current = price;
-      prevChangeRef.current = change;
       return () => clearTimeout(timer);
     }
-  }, [price, change]);
+  }, [price, change, prevPrice, prevChange]);
 
   // Use price's currency if available, otherwise use city's currency
   const actualCurrency = currency || cityCurrency;
@@ -258,7 +250,7 @@ function ComingSoonTile({ emoji, name }: { emoji: string; name: string }) {
 // MAIN COMPONENT
 // ============================================================================
 
-export function CityCard({ city, commodities, onReportPrice }: CityCardProps) {
+export function CityCard({ city, commodities, prevPrices, onReportPrice }: CityCardProps) {
   const cityCurrency = city.currency as Currency;
 
   const handlePriceClick = (commodity: string) => {
@@ -313,6 +305,7 @@ export function CityCard({ city, commodities, onReportPrice }: CityCardProps) {
           }
 
           if (hasPrice) {
+            const prev = prevPrices?.[commodity.id];
             return (
               <LivePriceTile
                 key={commodity.id}
@@ -321,6 +314,8 @@ export function CityCard({ city, commodities, onReportPrice }: CityCardProps) {
                 name={commodity.name}
                 price={priceData!.value!}
                 change={priceData!.change}
+                prevPrice={prev?.price}
+                prevChange={prev?.change}
                 currency={(priceData?.currency as Currency) || cityCurrency}
                 cityCurrency={cityCurrency}
                 onClick={() => handlePriceClick(commodity.id)}

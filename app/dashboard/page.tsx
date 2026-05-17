@@ -57,9 +57,13 @@ interface CityBundle {
 
 type FilterType = "all" | CommodityType;
 
+// Store previous prices for flash detection
+type PriceSnapshot = Record<string, Record<string, { price: number; change: number | null }>>;
+
 export default function DashboardPage() {
   const { t } = useLanguage();
   const [data, setData] = useState<ExtendedDashboardData | null>(null);
+  const [prevPrices, setPrevPrices] = useState<PriceSnapshot>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stale, setStale] = useState(false);
@@ -75,7 +79,23 @@ export default function DashboardPage() {
         if (!res.ok) throw new Error("Failed to fetch");
         const newData = await res.json();
         if (isMounted) {
-          setData(newData);
+          // Store current prices as previous before updating
+          setData((currentData) => {
+            if (currentData) {
+              const snapshot: PriceSnapshot = {};
+              for (const spot of currentData.spots) {
+                snapshot[spot.id] = {};
+                for (const p of spot.prices) {
+                  snapshot[spot.id][p.commodity_id] = {
+                    price: p.price ?? 0,
+                    change: p.change_pct,
+                  };
+                }
+              }
+              setPrevPrices(snapshot);
+            }
+            return newData;
+          });
           setError(null);
           setStale(false);
           setLoading(false);
@@ -180,9 +200,9 @@ export default function DashboardPage() {
         flag: "🇷🇼",
         country: "RW",
       },
-      owino: {
-        name: t("cities.owino"),
-        subtitle: t("citySubtitles.owino"),
+      kampala: {
+        name: t("cities.kampala"),
+        subtitle: t("citySubtitles.kampala"),
         currency: "UGX",
         flag: "🇺🇬",
         country: "UG",
@@ -510,6 +530,7 @@ export default function DashboardPage() {
                 key={city.id}
                 city={city}
                 commodities={liveCommodities}
+                prevPrices={prevPrices[city.id]}
                 onReportPrice={(cityId, commodity) => {
                   // TODO: Open price report modal
                   console.log(`Report price for ${commodity} in ${cityId}`);
