@@ -302,19 +302,8 @@ function derivePrice(sourcePrice: number, minPct: number, maxPct: number, seed: 
   return Math.round(sourcePrice * (1 + pctOffset / 100));
 }
 
-// Debug info type
-export interface FluctuationDebug {
-  enabled: boolean;
-  pct: number;
-  interval: number;
-  activeSpots: number;
-  commodities: number;
-  fluctuatedCount: number;
-  samples: Array<{ spot: string; commodity: string; base: number; new: number; change: number }>;
-}
-
 // Get prices with fluctuations and fallbacks applied
-export async function getPricesWithFluctuations(): Promise<{ prices: Price[]; debug: FluctuationDebug }> {
+export async function getPricesWithFluctuations(): Promise<Price[]> {
   const [basePrices, config, fallbacks, validCommodityIds, spots] = await Promise.all([
     getPricesLong(),
     getConfig(),
@@ -324,18 +313,9 @@ export async function getPricesWithFluctuations(): Promise<{ prices: Price[]; de
   ]);
 
   // Read from sheet config - update these in Google Sheet config tab
-  const fluctuationEnabledRaw = config.fluctuation_enabled;
-  const fluctuationEnabled = fluctuationEnabledRaw?.toLowerCase() !== 'false';
+  const fluctuationEnabled = config.fluctuation_enabled?.toLowerCase() !== 'false';
   const fluctuationPct = parseNum(config.fluctuation_pct) || 4;
   const fluctuationInterval = parseNum(config.fluctuation_interval_sec) || 10;
-
-  // Debug logging
-  console.log('[Fluctuation] Config:', {
-    raw: fluctuationEnabledRaw,
-    enabled: fluctuationEnabled,
-    pct: fluctuationPct,
-    interval: fluctuationInterval
-  });
 
   // Build price map for lookups
   const priceMap = new Map<string, Price>();
@@ -346,10 +326,6 @@ export async function getPricesWithFluctuations(): Promise<{ prices: Price[]; de
 
   const result: Price[] = [];
   const activeSpots = spots.filter(s => s.active).map(s => s.id);
-  const debugSamples: FluctuationDebug['samples'] = [];
-  let fluctuatedCount = 0;
-
-  console.log('[Fluctuation] Active spots:', activeSpots.length, 'Commodities:', validCommodityIds.length);
 
   // Process each spot and commodity
   for (const spotId of activeSpots) {
@@ -402,11 +378,6 @@ export async function getPricesWithFluctuations(): Promise<{ prices: Price[]; de
             fluctuationInterval
           );
 
-          console.log('[Fluctuation] Applied:', { spotId, commodityId, base: price.price, fluctuated: fluctuatedPrice, change_pct });
-
-          fluctuatedCount++;
-          debugSamples.push({ spot: spotId, commodity: commodityId, base: price.price, new: fluctuatedPrice, change: change_pct });
-
           result.push({
             ...price,
             price: fluctuatedPrice,
@@ -425,15 +396,5 @@ export async function getPricesWithFluctuations(): Promise<{ prices: Price[]; de
     }
   }
 
-  const debug: FluctuationDebug = {
-    enabled: fluctuationEnabled,
-    pct: fluctuationPct,
-    interval: fluctuationInterval,
-    activeSpots: activeSpots.length,
-    commodities: validCommodityIds.length,
-    fluctuatedCount,
-    samples: debugSamples,
-  };
-
-  return { prices: result, debug };
+  return result;
 }
