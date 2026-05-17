@@ -11,6 +11,9 @@ import {
 } from '@/lib/eacc-data';
 import type { SpotWithPrices, DashboardData, Price } from '@/lib/types';
 
+// Force dynamic rendering - no static caching
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     // Fetch all data in parallel
@@ -68,7 +71,7 @@ export async function GET() {
     // Sort commodities by tab_order
     const sortedCommodities = [...commodities].sort((a, b) => a.tab_order - b.tab_order);
 
-    const data: DashboardData & { spreads: typeof spreads; exchangeRates: typeof exchangeRates } = {
+    const data: DashboardData & { spreads: typeof spreads; exchangeRates: typeof exchangeRates; _debug?: { timestamp: number } } = {
       spots: spotsWithPrices,
       config,
       commodities: sortedCommodities,
@@ -78,6 +81,7 @@ export async function GET() {
       exchangeRates,
       kigali_averages,
       active_agents,
+      _debug: { timestamp: Date.now() },
     };
 
     return NextResponse.json(data, {
