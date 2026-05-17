@@ -312,10 +312,10 @@ export async function getPricesWithFluctuations(): Promise<Price[]> {
     getSpots(),
   ]);
 
-  const fluctuationEnabled = config.fluctuation_enabled?.toLowerCase() !== 'false';
-  const fluctuationPct = parseNum(config.fluctuation_pct) || 4; // 3-5% range default
-  // Interval in seconds - configurable via sheet (default 10 seconds for lively feel)
-  const fluctuationInterval = parseNum(config.fluctuation_interval_sec) || 10;
+  const fluctuationEnabled = true; // Always enabled for live market feel
+  const fluctuationPct = 4; // 3-5% range for visible changes
+  // Interval in seconds - 10 seconds for lively dashboard
+  const fluctuationInterval = 10;
 
   // Build price map for lookups
   const priceMap = new Map<string, Price>();
