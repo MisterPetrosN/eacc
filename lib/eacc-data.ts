@@ -302,8 +302,19 @@ function derivePrice(sourcePrice: number, minPct: number, maxPct: number, seed: 
   return Math.round(sourcePrice * (1 + pctOffset / 100));
 }
 
+// Debug info type
+export interface FluctuationDebug {
+  enabled: boolean;
+  pct: number;
+  interval: number;
+  activeSpots: number;
+  commodities: number;
+  fluctuatedCount: number;
+  samples: Array<{ spot: string; commodity: string; base: number; new: number; change: number }>;
+}
+
 // Get prices with fluctuations and fallbacks applied
-export async function getPricesWithFluctuations(): Promise<Price[]> {
+export async function getPricesWithFluctuations(): Promise<{ prices: Price[]; debug: FluctuationDebug }> {
   const [basePrices, config, fallbacks, validCommodityIds, spots] = await Promise.all([
     getPricesLong(),
     getConfig(),
@@ -335,6 +346,8 @@ export async function getPricesWithFluctuations(): Promise<Price[]> {
 
   const result: Price[] = [];
   const activeSpots = spots.filter(s => s.active).map(s => s.id);
+  const debugSamples: FluctuationDebug['samples'] = [];
+  let fluctuatedCount = 0;
 
   console.log('[Fluctuation] Active spots:', activeSpots.length, 'Commodities:', validCommodityIds.length);
 
@@ -391,6 +404,9 @@ export async function getPricesWithFluctuations(): Promise<Price[]> {
 
           console.log('[Fluctuation] Applied:', { spotId, commodityId, base: price.price, fluctuated: fluctuatedPrice, change_pct });
 
+          fluctuatedCount++;
+          debugSamples.push({ spot: spotId, commodity: commodityId, base: price.price, new: fluctuatedPrice, change: change_pct });
+
           result.push({
             ...price,
             price: fluctuatedPrice,
@@ -409,5 +425,15 @@ export async function getPricesWithFluctuations(): Promise<Price[]> {
     }
   }
 
-  return result;
+  const debug: FluctuationDebug = {
+    enabled: fluctuationEnabled,
+    pct: fluctuationPct,
+    interval: fluctuationInterval,
+    activeSpots: activeSpots.length,
+    commodities: validCommodityIds.length,
+    fluctuatedCount,
+    samples: debugSamples,
+  };
+
+  return { prices: result, debug };
 }

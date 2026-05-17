@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // Fetch all data in parallel
-    const [spots, prices, config, commodities, agents, lottery, spreads, exchangeRates] =
+    const [spots, pricesResult, config, commodities, agents, lottery, spreads, exchangeRates] =
       await Promise.all([
         getSpots(),
         getPricesWithFluctuations(),
@@ -28,6 +28,8 @@ export async function GET() {
         getSpreads(),
         getExchangeRates(),
       ]);
+
+    const { prices, debug: fluctuationDebug } = pricesResult;
 
     // Group prices by spot_id
     const pricesBySpot = new Map<string, Price[]>();
@@ -81,7 +83,7 @@ export async function GET() {
       exchangeRates,
       kigali_averages,
       active_agents,
-      _debug: { timestamp: Date.now() },
+      _debug: { timestamp: Date.now(), fluctuation: fluctuationDebug },
     };
 
     return NextResponse.json(data, {
